@@ -1,0 +1,10 @@
+# build artifacts
+build/*
+result
+
+# clangd
+compile_commands.json
+.cache/*
+
+# direnv
+.direnv/*
