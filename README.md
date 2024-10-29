@@ -18,3 +18,10 @@ stl-headers, it needs a 'compilation database' (`compile_commands.json`). Genera
 mkdir build && cd build && cmake .. && cp compile_commands.json .. && cd .. && rm -rf build
 ```
 (removes the build-directory because it causes a strange interference with `nix-build`).
+
+# TODO
+
+- write makefile
+- 3-D (or N-D?)
+- check performance
+- parallelize (careful with RNG)
