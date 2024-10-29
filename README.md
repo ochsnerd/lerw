@@ -1,7 +1,11 @@
 # Build & Run
 
+(inside the nix-shell)
+
 ```bash
-nix-build && ./result/lerw
+nix-build
+./result/lerw >> results.csv
+python plot results.csv
 ```
 
 # LSP
