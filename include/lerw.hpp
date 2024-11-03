@@ -2,10 +2,12 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <execution>
 #include <format>
 #include <functional>
 #include <numeric>
 #include <optional>
+#include <print>
 #include <random>
 #include <string>
 #include <unordered_set>
@@ -77,14 +79,12 @@ struct Stepper {
   std::uniform_int_distribution<uint8_t> distribution{0, directions.size() - 1};
   std::mt19937 gen;
 
-  Stepper(unsigned long seed) : gen{seed} {};
+  explicit Stepper(unsigned seed) : gen{seed} {};
 
   auto operator()(const Vec<2> &p) -> Vec<2> {
     return p + directions[distribution(gen)];
   }
 };
-
-template <class Step> struct LoopErasingStepper {};
 
 struct LengthStopper {
   size_t length;
@@ -185,12 +185,26 @@ template <class Step, class Stop> struct LoopErasedRandomWalkGenerator {
   }
 };
 
-template <class Generator>
-auto compute_average_length(Generator &&generator, size_t N) -> double {
+template <class GeneratorFactory>
+auto compute_average_length(GeneratorFactory generator_factory, size_t N)
+    -> double {
   std::vector<size_t> lengths(N);
-  std::ranges::generate(lengths,
-                        [&generator] mutable { return generator().size(); });
-  return 1.0 * *std::ranges::fold_left_first(lengths, std::plus{}) / N;
+
+  // TODO: Ugly?
+  std::vector<decltype(generator_factory(std::random_device{}()))> generators;
+  std::generate_n(std::execution::seq, std::back_inserter(generators), N,
+                  [&generator_factory] {
+                    return generator_factory(std::random_device{}());
+                  });
+
+  std::transform(std::execution::par_unseq, generators.begin(),
+                 generators.end(), lengths.begin(),
+                 [](auto &generator) { return generator().size(); });
+
+  return 1.0 *
+         std::reduce(std::execution::par_unseq, lengths.cbegin(),
+                     lengths.cend(), 0, std::plus{}) /
+         N;
 }
 
 constexpr auto format_walk(const Walk &walk) -> std::string {

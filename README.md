@@ -5,7 +5,7 @@
 ```bash
 nix-build
 ./result/lerw >> results.csv
-python plot results.csv
+python plot.py results.csv
 ```
 
 # LSP
@@ -24,4 +24,4 @@ mkdir build && cd build && cmake .. && cp compile_commands.json .. && cd .. && r
 - write makefile
 - 3-D (or N-D?)
 - check performance
-- parallelize (careful with RNG)
+- parallelize (careful with RNG) (idea: copy-constructor of stepper which randomizes state)

@@ -12,6 +12,7 @@ gcc14Stdenv.mkDerivation {
   src = ./.;
 
   buildInputs = [
+    tbb
     clang-tools
     cmake
     pythonEnv

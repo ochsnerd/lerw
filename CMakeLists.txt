@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.6)
 project(lerw)
 
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -O3")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
@@ -11,6 +11,8 @@ set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTOR
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 add_executable(lerw src/main.cpp)
+
+target_link_libraries(lerw PRIVATE tbb)
 
 # nix-build wants an 'install' target
 install(TARGETS lerw DESTINATION .)
