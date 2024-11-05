@@ -47,14 +47,14 @@ template <size_t Dimension> struct Vec {
                                  abs{});
   }
 
-  constexpr static auto Zero() -> Vec<Dimension> {
+  consteval static auto Zero() -> Vec<Dimension> {
     Vec<Dimension> res{};
     for (size_t i = 0; i < Dimension; ++i)
       res.values[i] = 0;
     return res;
   }
 
-  constexpr static auto Directions()
+  consteval static auto Directions()
       -> std::array<Vec<Dimension>, 2 * Dimension> {
     auto directions = std::array<Vec<Dimension>, 2 * Dimension>{};
     for (size_t i = 0; i < 2 * Dimension; ++i) {
