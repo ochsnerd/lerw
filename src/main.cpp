@@ -1,4 +1,5 @@
 #include <boost/program_options.hpp>
+#include <execution>
 #include <iostream>
 #include <random>
 #include <ranges>
@@ -46,10 +47,10 @@ auto main(int argc, char *argv[]) -> int {
   }
 
   auto make_generator_factory = [](double distance) {
-    return [distance]<class RNG>(RNG&& rng) {
+    return [distance]<class RNG>(RNG &&rng) {
       using namespace lerw;
-      return LoopErasedRandomWalkGenerator{L2DistanceStopper{distance},
-					   Stepper<Dimension, RNG>{std::move(rng)}};
+      return LoopErasedRandomWalkGenerator{
+          L2DistanceStopper{distance}, Stepper<Dimension, RNG>{std::move(rng)}};
     };
   };
 
@@ -60,8 +61,10 @@ auto main(int argc, char *argv[]) -> int {
            std::views::transform([](auto exp) { return std::pow(2.0, exp); }) |
            std::views::transform([=](auto d) {
              return std::make_pair(
-                 d, lerw::compute_average_length(
-						 std::mt19937{(unsigned long)d}, make_generator_factory(d), n_samples));
+                 d, lerw::compute_average_length(std::execution::par_unseq,
+                                                 std::mt19937{(unsigned long)d},
+                                                 make_generator_factory(d),
+                                                 n_samples));
            })) {
     std::cout << d << ", " << l << '\n';
   }

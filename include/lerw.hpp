@@ -77,7 +77,7 @@ template <size_t Dimension> struct Vec {
   bool operator==(const Vec<Dimension> &) const = default;
 };
 
-  template <size_t Dimension, class RNG> struct Stepper {
+template <size_t Dimension, class RNG> struct Stepper {
   std::uniform_int_distribution<uint8_t> distribution{0, 2 * Dimension - 1};
   RNG rng;
 
@@ -178,25 +178,35 @@ template <class Step, class Stop> struct LoopErasedRandomWalkGenerator {
   }
 };
 
-  template <class RNG, class GeneratorFactory>
-  auto compute_average_length(RNG seedRNG, GeneratorFactory generator_factory, size_t N)
+template <class ExecutionPolicy, class RNG, class GeneratorFactory>
+auto compute_average_length(ExecutionPolicy &&policy, RNG seedRNG,
+                            GeneratorFactory generator_factory, size_t N)
     -> double {
-  std::vector<size_t> lengths(N);
+  // sadly, ranges do not support parallel execution (yet)
+  // we could write for example
+  // auto total_lengths = std::views::iota(1, N)
+  //   | std::views::transform([&generator_factory, &seedRNG](auto) {
+  //       return generator_factory(RNG{seedRNG()});
+  //     })
+  //   | std::views::transform(policy, [](auto& generator){
+  //       return generator().size();
+  //     })
+  //   | std::ranges::fold_left_first(policy, std::plus{});
+  // (and hope that it can get optimized)
 
   std::vector<decltype(generator_factory(RNG{seedRNG()}))> generators;
+  // This has to stay std::exectution::seq to prevent a race condition on the
+  // seed rng
   std::generate_n(std::execution::seq, std::back_inserter(generators), N,
                   [&generator_factory, &seedRNG] {
                     return generator_factory(RNG{seedRNG()});
                   });
 
-  std::transform(std::execution::par_unseq, generators.begin(),
-                 generators.end(), lengths.begin(),
-                 [](auto &generator) { return generator().size(); });
+  auto total_lenghts = std::transform_reduce(
+      policy, generators.begin(), generators.end(), 0, std::plus{},
+      [](auto &generator) { return generator().size(); });
 
-  return 1.0 *
-         std::reduce(std::execution::par_unseq, lengths.cbegin(),
-                     lengths.cend(), 0, std::plus{}) /
-         N;
+  return 1.0 * total_lenghts / N;
 }
 
 template <size_t Dimension>
