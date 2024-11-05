@@ -3,11 +3,9 @@
 #include <cmath>
 #include <cstdint>
 #include <execution>
-#include <format>
 #include <functional>
 #include <numeric>
 #include <optional>
-#include <print>
 #include <random>
 #include <string>
 #include <unordered_set>
@@ -56,6 +54,15 @@ template <size_t Dimension> struct Vec {
     return res;
   }
 
+  constexpr static auto Directions()
+      -> std::array<Vec<Dimension>, 2 * Dimension> {
+    auto directions = std::array<Vec<Dimension>, 2 * Dimension>{};
+    for (size_t i = 0; i < 2 * Dimension; ++i) {
+      directions[i].values[i / 2] = i % 2 ? -1 : 1;
+    }
+    return directions;
+  }
+
   struct Hash {
     constexpr std::size_t operator()(const Vec<Dimension> &vec) const {
       std::size_t hashValue = 0;
@@ -70,26 +77,27 @@ template <size_t Dimension> struct Vec {
   bool operator==(const Vec<Dimension> &) const = default;
 };
 
-using Walk = std::vector<Vec<2>>;
-
-struct Stepper {
-  // TODO: These should go into Vec
-  static constexpr std::array<Vec<2>, 4> directions{
-      {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}};
-  std::uniform_int_distribution<uint8_t> distribution{0, directions.size() - 1};
+template <size_t Dimension> struct Stepper {
+  std::uniform_int_distribution<uint8_t> distribution{0, 2 * Dimension - 1};
   std::mt19937 gen;
 
   explicit Stepper(unsigned seed) : gen{seed} {};
 
-  auto operator()(const Vec<2> &p) -> Vec<2> {
-    return p + directions[distribution(gen)];
+  auto operator()(const Vec<Dimension> &p) -> Vec<Dimension> {
+    return p + Vec<Dimension>::Directions()[distribution(gen)];
+  }
+
+  constexpr static auto Zero() -> Vec<Dimension> {
+    return Vec<Dimension>::Zero();
   }
 };
 
 struct LengthStopper {
   size_t length;
 
-  constexpr auto operator()(const Walk &walk) const -> bool {
+  template <size_t Dimension>
+  constexpr auto operator()(const std::vector<Vec<Dimension>> &walk) const
+      -> bool {
     return walk.size() > length;
   }
 };
@@ -97,7 +105,9 @@ struct LengthStopper {
 struct L1DistanceStopper {
   double distance;
 
-  constexpr auto operator()(const Walk &walk) const -> bool {
+  template <size_t Dimension>
+  constexpr auto operator()(const std::vector<Vec<Dimension>> &walk) const
+      -> bool {
     return walk.back().L1() > distance;
   }
 };
@@ -107,38 +117,20 @@ struct L2DistanceStopper {
 
   L2DistanceStopper(double distance) : distance_sq{distance * distance} {}
 
-  constexpr auto operator()(const Walk &walk) const -> bool {
+  template <size_t Dimension>
+  constexpr auto operator()(const std::vector<Vec<Dimension>> &walk) const
+      -> bool {
     return walk.back().L2Sq() > distance_sq;
   }
 };
-
-template <class Step>
-auto generate_fixed_length_random_walk(std::size_t length, Step stepper)
-    -> std::vector<Vec<2>> {
-  return generate_stopped_random_walk(LengthStopper{length}, stepper, length);
-}
-
-template <class Step>
-auto generate_fixed_distance_L1_random_walk(double distance, Step stepper)
-    -> std::vector<Vec<2>> {
-  return generate_stopped_random_walk(L1DistanceStopper{distance}, stepper);
-}
-
-template <class Step>
-auto generate_fixed_distance_L2Sq_random_walk(double distanceSquared,
-                                              Step stepper)
-    -> std::vector<Vec<2>> {
-  return generate_stopped_random_walk(L2DistanceStopper{distanceSquared},
-                                      stepper);
-}
 
 template <class Step, class Stop> struct RandomWalkGenerator {
   Stop stopper;
   Step stepper;
   std::optional<size_t> expected_size = std::nullopt;
 
-  constexpr auto operator()() -> Walk {
-    Walk walk{Vec<2>::Zero()};
+  constexpr auto operator()() -> auto {
+    std::vector<decltype(Step::Zero())> walk{Step::Zero()};
 
     if (expected_size)
       walk.reserve(*expected_size);
@@ -155,9 +147,10 @@ template <class Step, class Stop> struct LoopErasedRandomWalkGenerator {
   Step stepper;
   std::optional<size_t> expected_size = std::nullopt;
 
-  constexpr auto operator()() -> Walk {
-    std::unordered_set<Vec<2>, Vec<2>::Hash> visited{Vec<2>::Zero()};
-    Walk walk{Vec<2>::Zero()};
+  constexpr auto operator()() -> auto {
+    using VecType = decltype(Step::Zero());
+    std::unordered_set<VecType, typename VecType::Hash> visited{Step::Zero()};
+    std::vector<VecType> walk{Step::Zero()};
 
     if (expected_size) {
       // Measure: theres also rehash, and bucket_size
@@ -207,10 +200,15 @@ auto compute_average_length(GeneratorFactory generator_factory, size_t N)
          N;
 }
 
-constexpr auto format_walk(const Walk &walk) -> std::string {
+template <size_t Dimension>
+constexpr auto format_walk(const std::vector<Vec<Dimension>> &walk)
+    -> std::string {
   std::string s = "{\n";
-  for (const auto &e : walk)
-    s += (std::format("{} {}\n", e.values[0], e.values[1]));
+  for (const auto &e : walk) {
+    for (const auto &v : e.values)
+      s += std::to_string(v) + " ";
+    s += '\n';
+  }
   s += "}\n";
   return s;
 }

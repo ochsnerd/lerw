@@ -8,6 +8,7 @@
 namespace po = boost::program_options;
 
 auto main(int argc, char *argv[]) -> int {
+  constexpr static size_t Dimension = 3;
   // Default values
   size_t n_samples = 1000;  // number of samples for averaging
   size_t max_exponent = 10; // maximum exponent of distance (2^10 = 1024)
@@ -47,7 +48,7 @@ auto main(int argc, char *argv[]) -> int {
     return [distance](auto seed) {
       using namespace lerw;
       return LoopErasedRandomWalkGenerator{L2DistanceStopper{distance},
-                                           Stepper{seed}};
+                                           Stepper<Dimension>{seed}};
     };
   };
 
