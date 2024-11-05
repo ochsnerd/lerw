@@ -13,6 +13,7 @@ gcc14Stdenv.mkDerivation {
 
   buildInputs = [
     tbb
+    boost185
     clang-tools
     cmake
     pythonEnv

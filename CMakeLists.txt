@@ -12,7 +12,9 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 add_executable(lerw src/main.cpp)
 
-target_link_libraries(lerw PRIVATE tbb)
+target_link_libraries(lerw PRIVATE
+  tbb
+  boost_program_options)
 
 # nix-build wants an 'install' target
 install(TARGETS lerw DESTINATION .)
