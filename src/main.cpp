@@ -13,7 +13,7 @@ auto main(int argc, char *argv[]) -> int {
   constexpr static size_t Dimension = 3;
   // Default values
   size_t n_samples = 1000;  // number of samples for averaging
-  size_t max_exponent = 10; // maximum exponent of distance (2^10 = 1024)
+  size_t max_exponent = 11; // maximum exponent of distance (2^10 = 1024)
   size_t N = 8;             // number of distances
 
   po::options_description desc("Allowed options");
@@ -59,6 +59,7 @@ auto main(int argc, char *argv[]) -> int {
   for (auto [d, l] :
        std::ranges::iota_view(max_exponent - N + 1, max_exponent + 1) |
            std::views::transform([](auto exp) { return std::pow(2.0, exp); }) |
+           std::views::drop_while([](auto d) { return d < 500; }) |
            std::views::transform([=](auto d) {
              return std::make_pair(
                  d, lerw::compute_average_length(std::execution::par_unseq,
