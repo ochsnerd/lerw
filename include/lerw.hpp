@@ -77,14 +77,14 @@ template <size_t Dimension> struct Vec {
   bool operator==(const Vec<Dimension> &) const = default;
 };
 
-template <size_t Dimension> struct Stepper {
+  template <size_t Dimension, class RNG> struct Stepper {
   std::uniform_int_distribution<uint8_t> distribution{0, 2 * Dimension - 1};
-  std::mt19937 gen;
+  RNG rng;
 
-  explicit Stepper(unsigned seed) : gen{seed} {};
+  explicit Stepper(RNG rng) : rng{rng} {};
 
   auto operator()(const Vec<Dimension> &p) -> Vec<Dimension> {
-    return p + Vec<Dimension>::Directions()[distribution(gen)];
+    return p + Vec<Dimension>::Directions()[distribution(rng)];
   }
 
   constexpr static auto Zero() -> Vec<Dimension> {
@@ -178,16 +178,15 @@ template <class Step, class Stop> struct LoopErasedRandomWalkGenerator {
   }
 };
 
-template <class GeneratorFactory>
-auto compute_average_length(GeneratorFactory generator_factory, size_t N)
+  template <class RNG, class GeneratorFactory>
+  auto compute_average_length(RNG seedRNG, GeneratorFactory generator_factory, size_t N)
     -> double {
   std::vector<size_t> lengths(N);
 
-  // TODO: Ugly?
-  std::vector<decltype(generator_factory(std::random_device{}()))> generators;
+  std::vector<decltype(generator_factory(RNG{seedRNG()}))> generators;
   std::generate_n(std::execution::seq, std::back_inserter(generators), N,
-                  [&generator_factory] {
-                    return generator_factory(std::random_device{}());
+                  [&generator_factory, &seedRNG] {
+                    return generator_factory(RNG{seedRNG()});
                   });
 
   std::transform(std::execution::par_unseq, generators.begin(),
