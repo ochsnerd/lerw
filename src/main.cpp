@@ -51,9 +51,11 @@ auto main(int argc, char *argv[]) -> int {
   auto make_generator_factory = [](double distance) {
     using namespace lerw;
     return [distance]<NumberGenerator RNG>(RNG &&rng) {
-      return LoopErasedRandomWalkGenerator{
+      return LoopErasedRandomWalkGenerator<RNG, Lattice<Dimension>,
+                                           L2DistanceStopper,
+                                           Stepper<RNG, Lattice<Dimension>>>{
           L2DistanceStopper{distance},
-          Stepper<Lattice<Dimension>, RNG>{std::move(rng)}};
+          Stepper<RNG, Lattice<Dimension>>{std::move(rng)}};
     };
   };
 
@@ -65,10 +67,12 @@ auto main(int argc, char *argv[]) -> int {
            std::views::drop_while([](auto d) { return d < 500; }) |
            std::views::transform([=](auto d) {
              return std::make_pair(
-                 d, lerw::compute_average_length(std::execution::par_unseq,
-                                                 std::mt19937{(unsigned long)d},
-                                                 make_generator_factory(d),
-                                                 n_samples));
+                 d,
+                 lerw::compute_average_length<
+                     decltype(std::execution::par_unseq), std::mt19937,
+                     Lattice<Dimension>, decltype(make_generator_factory(0))>(
+                     std::execution::par_unseq, std::mt19937{(unsigned long)d},
+                     make_generator_factory(d), n_samples));
            })) {
     std::cout << d << ", " << l << '\n';
   }

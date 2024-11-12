@@ -13,7 +13,57 @@
 
 namespace lerw {
 
-using field_t = int;
+template <class T>
+concept NumberGenerator = requires(T t) {
+  { t() } -> std::same_as<unsigned long>;
+};
+
+template <class Generator, class U>
+concept WalkGenerator = requires(Generator t) {
+  { t() } -> std::same_as<std::vector<U>>;
+};
+
+template <class GeneratorFactory, class SeedGenerator, class U>
+concept WalkGeneratorFactory = NumberGenerator<SeedGenerator> &&
+                               requires(GeneratorFactory t, SeedGenerator n) {
+                                 { t(std::move(n)) } -> WalkGenerator<U>;
+                               };
+
+template <class C, class T>
+concept Indexable = requires(C container, std::size_t i) {
+  { container.size() } -> std::convertible_to<std::size_t>;
+  // {container[i]} -> std::same_as<T>;
+  // does not work because operator[] can also return a reference
+
+  requires std::same_as<std::remove_cvref_t<decltype(container[i])>, T>;
+};
+
+template <class T>
+concept Point = requires(T p1, T p2) {
+  { p1 + p2 } -> std::same_as<T>;
+  { p1.L2Sq() } -> std::convertible_to<double>;
+  { p1.L1() } -> std::convertible_to<double>;
+};
+
+template <class T>
+concept Graph = requires(T) {
+  typename T::Point;
+  requires Point<typename T::Point>;
+  { T::Zero() } -> std::same_as<typename T::Point>;
+  requires Indexable<decltype(T::Directions()), typename T::Point>;
+};
+
+
+template <class T, class RNG, class G>
+concept StepperC = Graph<G> && NumberGenerator<RNG> &&
+                   requires(T stepper, RNG rng, G::Point p) {
+                     { stepper(p) } -> std::same_as<typename G::Point>;
+                   };
+
+template <class T, class P>
+concept Stopper = Point<P> && requires(T t, std::vector<P> walk) {
+  { t(walk) } -> std::same_as<bool>;
+};
 
 struct square {
   template <class T> constexpr auto operator()(T t) const -> T { return t * t; }
@@ -26,6 +76,7 @@ struct abs {
 };
 
 template <size_t Dimension> struct Lattice {
+  using field_t = int;
   struct Point {
     std::array<field_t, Dimension> values;
 
@@ -47,6 +98,7 @@ template <size_t Dimension> struct Lattice {
                                    std::plus{}, abs{});
     }
 
+    // TODO: specialize std::hash
     struct Hash {
       constexpr std::size_t operator()(const Point &vec) const {
         std::size_t hashValue = 0;
@@ -78,26 +130,23 @@ template <size_t Dimension> struct Lattice {
   }
 };
 
-template <class Graph, class RNG> struct Stepper {
+template <NumberGenerator RNG, Graph G> struct Stepper {
   std::uniform_int_distribution<uint8_t> distribution{
-      0, Graph::Directions().size() - 1};
+      0, G::Directions().size() - 1};
   RNG rng;
 
   explicit Stepper(RNG &&rng) : rng{std::move(rng)} {};
 
-  auto operator()(const Graph::Point &p) -> Graph::Point {
-    return p + Graph::Directions()[distribution(rng)];
+  auto operator()(const G::Point &p) -> G::Point {
+    return p + G::Directions()[distribution(rng)];
   }
-
-  constexpr static auto Zero() -> Graph::Point { return Graph::Zero(); }
 };
 
 struct LengthStopper {
   size_t length;
 
-  // TODO: Concept
-  template <class Point>
-  constexpr auto operator()(const std::vector<Point> &walk) const -> bool {
+  template <class P>
+  constexpr auto operator()(const std::vector<P> &walk) const -> bool {
     return walk.size() > length;
   }
 };
@@ -105,9 +154,8 @@ struct LengthStopper {
 struct L1DistanceStopper {
   double distance;
 
-  // TODO: Concept
-  template <class Point>
-  constexpr auto operator()(const std::vector<Point> &walk) const -> bool {
+  template <Point P>
+  constexpr auto operator()(const std::vector<P> &walk) const -> bool {
     return walk.back().L1() > distance;
   }
 };
@@ -117,20 +165,21 @@ struct L2DistanceStopper {
 
   L2DistanceStopper(double distance) : distance_sq{distance * distance} {}
 
-  // TODO: Concept
-  template <class Point>
-  constexpr auto operator()(const std::vector<Point> &walk) const -> bool {
+  template <Point P>
+  constexpr auto operator()(const std::vector<P> &walk) const -> bool {
     return walk.back().L2Sq() > distance_sq;
   }
 };
 
-template <class Step, class Stop> struct RandomWalkGenerator {
+template <NumberGenerator RNG, Graph G, Stopper<typename G::Point> Stop,
+          StepperC<RNG, G> Step>
+struct RandomWalkGenerator {
   Stop stopper;
   Step stepper;
   std::optional<size_t> expected_size = std::nullopt;
 
   constexpr auto operator()() -> auto {
-    std::vector<decltype(Step::Zero())> walk{Step::Zero()};
+    std::vector<typename G::Point> walk{G::Zero()};
 
     if (expected_size)
       walk.reserve(*expected_size);
@@ -142,15 +191,17 @@ template <class Step, class Stop> struct RandomWalkGenerator {
   }
 };
 
-template <class Stop, class Step> struct LoopErasedRandomWalkGenerator {
+template <NumberGenerator RNG, Graph G, Stopper<typename G::Point> Stop,
+          StepperC<RNG, G> Step>
+struct LoopErasedRandomWalkGenerator {
   Stop stopper;
   Step stepper;
   std::optional<size_t> expected_size = std::nullopt;
 
   constexpr auto operator()() -> auto {
-    using VecType = decltype(Step::Zero());
-    std::unordered_set<VecType, typename VecType::Hash> visited{Step::Zero()};
-    std::vector<VecType> walk{Step::Zero()};
+    using Point = G::Point;
+    std::unordered_set<Point, typename Point::Hash> visited{G::Zero()};
+    std::vector<Point> walk{G::Zero()};
 
     if (expected_size) {
       // Measure: theres also rehash, and bucket_size
@@ -178,25 +229,9 @@ template <class Stop, class Step> struct LoopErasedRandomWalkGenerator {
   }
 };
 
-template <class T>
-concept NumberGenerator = requires(T t) {
-  { t() } -> std::same_as<unsigned long>;
-};
-
-template <class Generator, class U>
-concept WalkGenerator = requires(Generator t) {
-  { t() } -> std::same_as<std::vector<U>>;
-};
-
-template <class GeneratorFactory, class SeedGenerator, class U>
-concept WalkGeneratorFactory = NumberGenerator<SeedGenerator> &&
-                               requires(GeneratorFactory t, SeedGenerator n) {
-                                 { t(std::move(n)) } -> WalkGenerator<U>;
-                               };
-
-template <class ExecutionPolicy, NumberGenerator RNG,
-          WalkGeneratorFactory<RNG, Lattice<3>::Point> GeneratorFactory>
-auto compute_average_length(ExecutionPolicy &&policy, RNG seedRNG,
+  template <class ExecutionPolicy, NumberGenerator RNG, Graph G,
+	    WalkGeneratorFactory<RNG, typename G::Point> GeneratorFactory>
+auto compute_average_length(ExecutionPolicy policy, RNG seedRNG,
                             GeneratorFactory generator_factory, size_t N)
     -> double {
   // sadly, ranges do not support parallel execution (yet)
