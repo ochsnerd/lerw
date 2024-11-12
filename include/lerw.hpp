@@ -25,80 +25,79 @@ struct abs {
   }
 };
 
-template <size_t Dimension> struct Vec {
-  std::array<field_t, Dimension> values;
+template <size_t Dimension> struct Lattice {
+  struct Point {
+    std::array<field_t, Dimension> values;
 
-  constexpr auto operator+(const Vec<Dimension> &other) const
-      -> Vec<Dimension> {
-    Vec<Dimension> res{};
-    for (size_t i = 0; i < Dimension; ++i)
-      res.values[i] = values[i] + other.values[i];
-    return res;
-  }
+    constexpr auto operator+(const Point &other) const -> Point {
+      Point res{};
+      for (size_t i = 0; i < Dimension; ++i)
+        res.values[i] = values[i] + other.values[i];
+      return res;
+    }
 
-  constexpr auto L2Sq() const -> double {
-    // Don't compute the sqrt because its expensive and unnecessary
-    return std::transform_reduce(values.cbegin(), values.cend(), 0, std::plus{},
-                                 square{});
-  }
+    constexpr auto L2Sq() const -> double {
+      // Don't compute the sqrt because its expensive and unnecessary
+      return std::transform_reduce(values.cbegin(), values.cend(), 0,
+                                   std::plus{}, square{});
+    }
 
-  constexpr auto L1() const -> double {
-    return std::transform_reduce(values.cbegin(), values.cend(), 0, std::plus{},
-                                 abs{});
-  }
+    constexpr auto L1() const -> double {
+      return std::transform_reduce(values.cbegin(), values.cend(), 0,
+                                   std::plus{}, abs{});
+    }
 
-  consteval static auto Zero() -> Vec<Dimension> {
+    struct Hash {
+      constexpr std::size_t operator()(const Point &vec) const {
+        std::size_t hashValue = 0;
+        for (const auto &elem : vec.values) {
+          hashValue ^= std::hash<unsigned int>()(elem) + 0x9e3779b9 +
+                       (hashValue << 6) + (hashValue >> 2);
+        }
+        return hashValue;
+      }
+    };
+
+    bool operator==(const Point &) const = default;
+  };
+
+  consteval static auto Zero() -> Point {
     // TODO: std::views::repeat?
-    Vec<Dimension> res{};
+    Point res{};
     for (size_t i = 0; i < Dimension; ++i)
       res.values[i] = 0;
     return res;
   }
 
-  consteval static auto Directions()
-      -> std::array<Vec<Dimension>, 2 * Dimension> {
-    auto directions = std::array<Vec<Dimension>, 2 * Dimension>{};
+  consteval static auto Directions() -> std::array<Point, 2 * Dimension> {
+    auto directions = std::array<Point, 2 * Dimension>{};
     for (size_t i = 0; i < 2 * Dimension; ++i) {
       directions[i].values[i / 2] = i % 2 ? -1 : 1;
     }
     return directions;
   }
-
-  struct Hash {
-    constexpr std::size_t operator()(const Vec<Dimension> &vec) const {
-      std::size_t hashValue = 0;
-      for (const auto &elem : vec.values) {
-        hashValue ^= std::hash<unsigned int>()(elem) + 0x9e3779b9 +
-                     (hashValue << 6) + (hashValue >> 2);
-      }
-      return hashValue;
-    }
-  };
-
-  bool operator==(const Vec<Dimension> &) const = default;
 };
 
-template <size_t Dimension, class RNG> struct Stepper {
-  std::uniform_int_distribution<uint8_t> distribution{0, 2 * Dimension - 1};
+template <class Graph, class RNG> struct Stepper {
+  std::uniform_int_distribution<uint8_t> distribution{
+      0, Graph::Directions().size() - 1};
   RNG rng;
 
   explicit Stepper(RNG &&rng) : rng{std::move(rng)} {};
 
-  auto operator()(const Vec<Dimension> &p) -> Vec<Dimension> {
-    return p + Vec<Dimension>::Directions()[distribution(rng)];
+  auto operator()(const Graph::Point &p) -> Graph::Point {
+    return p + Graph::Directions()[distribution(rng)];
   }
 
-  constexpr static auto Zero() -> Vec<Dimension> {
-    return Vec<Dimension>::Zero();
-  }
+  constexpr static auto Zero() -> Graph::Point { return Graph::Zero(); }
 };
 
 struct LengthStopper {
   size_t length;
 
-  template <size_t Dimension>
-  constexpr auto operator()(const std::vector<Vec<Dimension>> &walk) const
-      -> bool {
+  // TODO: Concept
+  template <class Point>
+  constexpr auto operator()(const std::vector<Point> &walk) const -> bool {
     return walk.size() > length;
   }
 };
@@ -106,9 +105,9 @@ struct LengthStopper {
 struct L1DistanceStopper {
   double distance;
 
-  template <size_t Dimension>
-  constexpr auto operator()(const std::vector<Vec<Dimension>> &walk) const
-      -> bool {
+  // TODO: Concept
+  template <class Point>
+  constexpr auto operator()(const std::vector<Point> &walk) const -> bool {
     return walk.back().L1() > distance;
   }
 };
@@ -118,9 +117,9 @@ struct L2DistanceStopper {
 
   L2DistanceStopper(double distance) : distance_sq{distance * distance} {}
 
-  template <size_t Dimension>
-  constexpr auto operator()(const std::vector<Vec<Dimension>> &walk) const
-      -> bool {
+  // TODO: Concept
+  template <class Point>
+  constexpr auto operator()(const std::vector<Point> &walk) const -> bool {
     return walk.back().L2Sq() > distance_sq;
   }
 };
@@ -196,7 +195,7 @@ concept WalkGeneratorFactory = NumberGenerator<SeedGenerator> &&
                                };
 
 template <class ExecutionPolicy, NumberGenerator RNG,
-          WalkGeneratorFactory<RNG, Vec<3>> GeneratorFactory>
+          WalkGeneratorFactory<RNG, Lattice<3>::Point> GeneratorFactory>
 auto compute_average_length(ExecutionPolicy &&policy, RNG seedRNG,
                             GeneratorFactory generator_factory, size_t N)
     -> double {
@@ -228,7 +227,8 @@ auto compute_average_length(ExecutionPolicy &&policy, RNG seedRNG,
 }
 
 template <size_t Dimension>
-constexpr auto format_walk(const std::vector<Vec<Dimension>> &walk)
+constexpr auto
+format_walk(const std::vector<typename Lattice<Dimension>::Point> &walk)
     -> std::string {
   std::string s = "{\n";
   for (const auto &e : walk) {

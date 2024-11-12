@@ -52,7 +52,8 @@ auto main(int argc, char *argv[]) -> int {
     using namespace lerw;
     return [distance]<NumberGenerator RNG>(RNG &&rng) {
       return LoopErasedRandomWalkGenerator{
-          L2DistanceStopper{distance}, Stepper<Dimension, RNG>{std::move(rng)}};
+          L2DistanceStopper{distance},
+          Stepper<Lattice<Dimension>, RNG>{std::move(rng)}};
     };
   };
 
