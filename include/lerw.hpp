@@ -48,6 +48,7 @@ template <size_t Dimension> struct Vec {
   }
 
   consteval static auto Zero() -> Vec<Dimension> {
+    // TODO: std::views::repeat?
     Vec<Dimension> res{};
     for (size_t i = 0; i < Dimension; ++i)
       res.values[i] = 0;
@@ -81,7 +82,7 @@ template <size_t Dimension, class RNG> struct Stepper {
   std::uniform_int_distribution<uint8_t> distribution{0, 2 * Dimension - 1};
   RNG rng;
 
-  explicit Stepper(RNG rng) : rng{rng} {};
+  explicit Stepper(RNG &&rng) : rng{std::move(rng)} {};
 
   auto operator()(const Vec<Dimension> &p) -> Vec<Dimension> {
     return p + Vec<Dimension>::Directions()[distribution(rng)];
@@ -142,7 +143,7 @@ template <class Step, class Stop> struct RandomWalkGenerator {
   }
 };
 
-template <class Step, class Stop> struct LoopErasedRandomWalkGenerator {
+template <class Stop, class Step> struct LoopErasedRandomWalkGenerator {
   Stop stopper;
   Step stepper;
   std::optional<size_t> expected_size = std::nullopt;
@@ -178,7 +179,24 @@ template <class Step, class Stop> struct LoopErasedRandomWalkGenerator {
   }
 };
 
-template <class ExecutionPolicy, class RNG, class GeneratorFactory>
+template <class T>
+concept NumberGenerator = requires(T t) {
+  { t() } -> std::same_as<unsigned long>;
+};
+
+template <class Generator, class U>
+concept WalkGenerator = requires(Generator t) {
+  { t() } -> std::same_as<std::vector<U>>;
+};
+
+template <class GeneratorFactory, class SeedGenerator, class U>
+concept WalkGeneratorFactory = NumberGenerator<SeedGenerator> &&
+                               requires(GeneratorFactory t, SeedGenerator n) {
+                                 { t(std::move(n)) } -> WalkGenerator<U>;
+                               };
+
+template <class ExecutionPolicy, NumberGenerator RNG,
+          WalkGeneratorFactory<RNG, Vec<3>> GeneratorFactory>
 auto compute_average_length(ExecutionPolicy &&policy, RNG seedRNG,
                             GeneratorFactory generator_factory, size_t N)
     -> double {
@@ -202,11 +220,11 @@ auto compute_average_length(ExecutionPolicy &&policy, RNG seedRNG,
                     return generator_factory(RNG{seedRNG()});
                   });
 
-  auto total_lenghts = std::transform_reduce(
+  auto total_lengths = std::transform_reduce(
       policy, generators.begin(), generators.end(), 0, std::plus{},
       [](auto &generator) { return generator().size(); });
 
-  return 1.0 * total_lenghts / N;
+  return 1.0 * total_lengths / N;
 }
 
 template <size_t Dimension>

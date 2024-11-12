@@ -7,10 +7,12 @@
 
 #include "lerw.hpp"
 
+using namespace lerw;
+
 namespace po = boost::program_options;
 
 auto main(int argc, char *argv[]) -> int {
-  constexpr static size_t Dimension = 3;
+  constexpr static int Dimension = 3;
   // Default values
   size_t n_samples = 1000;  // number of samples for averaging
   size_t max_exponent = 11; // maximum exponent of distance (2^10 = 1024)
@@ -47,8 +49,8 @@ auto main(int argc, char *argv[]) -> int {
   }
 
   auto make_generator_factory = [](double distance) {
-    return [distance]<class RNG>(RNG &&rng) {
-      using namespace lerw;
+    using namespace lerw;
+    return [distance]<NumberGenerator RNG>(RNG &&rng) {
       return LoopErasedRandomWalkGenerator{
           L2DistanceStopper{distance}, Stepper<Dimension, RNG>{std::move(rng)}};
     };
