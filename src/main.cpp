@@ -53,14 +53,7 @@ auto main(int argc, char *argv[]) -> int {
     return 1;
   }
 
-  auto make_generator_factory = [](double distance) {
-    using namespace lerw;
-    return [distance]<NumberGenerator RNG>(RNG &&rng) {
-      return LoopErasedRandomWalkGenerator<Lattice3D, L2DistanceStopper,
-                                           SimpleStepper<RNG, Lattice3D>>{
-          L2DistanceStopper{distance}, SimpleStepper<RNG, Lattice3D>(std::move(rng))};
-    };
-  };
+  std::mt19937 seed_rng{42};
 
   // Generate powers of 2 starting from 2^(max_exponent-N+1) up to
   // 2^max_exponent
@@ -68,13 +61,21 @@ auto main(int argc, char *argv[]) -> int {
        std::ranges::iota_view(max_exponent - N + 1, max_exponent + 1) |
            std::views::transform([](auto exp) { return std::pow(2.0, exp); }) |
            std::views::drop_while([](auto d) { return d < 500; }) |
-           std::views::transform([=](auto d) {
-             return std::make_pair(d,
-                                   lerw::compute_average_length<
-                                       std::mt19937, Lattice3D,
-                                       decltype(make_generator_factory(0))>(
-                                       std::mt19937{(unsigned long)d},
-                                       make_generator_factory(d), n_samples));
+           std::views::transform([&seed_rng, n_samples](auto d) {
+             // ad-hoc factories
+             auto make_stopper = [d] { return L2DistanceStopper{d}; };
+             auto make_stepper = [&seed_rng] {
+               return SimpleStepper<std::mt19937, Lattice3D>{
+                   std::mt19937{seed_rng()}};
+             };
+             auto make_generator = [&make_stopper, &make_stepper] {
+               return LoopErasedRandomWalkGenerator<
+                   Lattice3D, L2DistanceStopper,
+                   SimpleStepper<std::mt19937, Lattice3D>>{make_stopper(),
+                                                           make_stepper()};
+             };
+             return std::make_pair(
+                 d, compute_average_length(make_generator, n_samples));
            })) {
     std::cout << d << ", " << l << '\n';
   }

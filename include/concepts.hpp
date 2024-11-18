@@ -14,11 +14,11 @@ concept WalkGenerator = requires(Generator t) {
   { t() } -> std::same_as<std::vector<U>>;
 };
 
-template <class GeneratorFactory, class SeedGenerator, class U>
-concept WalkGeneratorFactory = NumberGenerator<SeedGenerator> &&
-                               requires(GeneratorFactory t, SeedGenerator n) {
-                                 { t(std::move(n)) } -> WalkGenerator<U>;
-                               };
+// TODO: Use this?
+template <class F, class U>
+concept Factory = requires(F f) {
+  { f() } -> std::same_as<U>;
+};
 
 template <class C, class T>
 concept Indexable = requires(C container, std::size_t i) {

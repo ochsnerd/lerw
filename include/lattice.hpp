@@ -29,7 +29,7 @@ struct Lattice3D {
       }
     };
 
-    bool operator==(const Point &) const = default;
+    auto operator==(const Point &) const -> bool = default;
   };
   consteval static auto Zero() -> Point { return {0, 0, 0}; }
 
@@ -74,7 +74,7 @@ template <size_t Dimension> struct Lattice {
       }
     };
 
-    bool operator==(const Point &) const = default;
+    auto operator==(const Point &) const -> bool = default;
   };
 
   consteval static auto Zero() -> Point {
