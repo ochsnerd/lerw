@@ -5,7 +5,12 @@
 #include <ranges>
 #include <utility>
 
+#include "concepts.hpp"
+#include "generator.hpp"
+#include "lattice.hpp"
 #include "lerw.hpp"
+#include "stepper.hpp"
+#include "stopper.hpp"
 
 using namespace lerw;
 
@@ -51,11 +56,9 @@ auto main(int argc, char *argv[]) -> int {
   auto make_generator_factory = [](double distance) {
     using namespace lerw;
     return [distance]<NumberGenerator RNG>(RNG &&rng) {
-      return LoopErasedRandomWalkGenerator<RNG, Lattice3D,
-                                           L2DistanceStopper,
-                                           Stepper<RNG, Lattice3D>>{
-          L2DistanceStopper{distance},
-          Stepper<RNG, Lattice3D>{std::move(rng)}};
+      return LoopErasedRandomWalkGenerator<Lattice3D, L2DistanceStopper,
+                                           SimpleStepper<RNG, Lattice3D>>{
+          L2DistanceStopper{distance}, SimpleStepper<RNG, Lattice3D>(std::move(rng))};
     };
   };
 
@@ -66,13 +69,12 @@ auto main(int argc, char *argv[]) -> int {
            std::views::transform([](auto exp) { return std::pow(2.0, exp); }) |
            std::views::drop_while([](auto d) { return d < 500; }) |
            std::views::transform([=](auto d) {
-             return std::make_pair(
-                 d,
-                 lerw::compute_average_length<
-                     decltype(std::execution::par_unseq), std::mt19937,
-                     Lattice3D, decltype(make_generator_factory(0))>(
-                     std::execution::par_unseq, std::mt19937{(unsigned long)d},
-                     make_generator_factory(d), n_samples));
+             return std::make_pair(d,
+                                   lerw::compute_average_length<
+                                       std::mt19937, Lattice3D,
+                                       decltype(make_generator_factory(0))>(
+                                       std::mt19937{(unsigned long)d},
+                                       make_generator_factory(d), n_samples));
            })) {
     std::cout << d << ", " << l << '\n';
   }
