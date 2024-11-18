@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <concepts>
 #include <cstdint>
 #include <execution>
 #include <functional>
@@ -39,10 +40,11 @@ concept Indexable = requires(C container, std::size_t i) {
 };
 
 template <class T>
-concept Point = requires(T p1, T p2) {
+concept Point = std::equality_comparable<T> && requires(T p1, T p2) {
   { p1 + p2 } -> std::same_as<T>;
   { p1.L2Sq() } -> std::convertible_to<double>;
   { p1.L1() } -> std::convertible_to<double>;
+  // TODO: Hashable
 };
 
 template <class T>
@@ -52,7 +54,6 @@ concept Graph = requires(T) {
   { T::Zero() } -> std::same_as<typename T::Point>;
   requires Indexable<decltype(T::Directions()), typename T::Point>;
 };
-
 
 template <class T, class RNG, class G>
 concept StepperC = Graph<G> && NumberGenerator<RNG> &&
@@ -72,6 +73,37 @@ struct square {
 struct abs {
   template <class T> constexpr auto operator()(T t) const -> T {
     return std::abs(t);
+  }
+};
+
+struct Lattice3D {
+  struct Point {
+    int x;
+    int y;
+    int z;
+
+    constexpr auto operator+(const Point &other) const -> Point {
+      return {x + other.x, y + other.y, z + other.z};
+    }
+    constexpr auto L2Sq() const -> double { return x * x + y * y + z * z; }
+    constexpr auto L1() const -> double {
+      const auto a = abs{};
+      return a(x) + a(y) + a(z);
+    }
+
+    struct Hash {
+      constexpr std::size_t operator()(const Point &vec) const {
+        return std::hash<int>()(vec.x) ^ std::hash<int>()(vec.y << 16) ^
+               std::hash<int>()(vec.z << 8);
+      }
+    };
+
+    bool operator==(const Point &) const = default;
+  };
+  consteval static auto Zero() -> Point { return {0, 0, 0}; }
+  consteval static auto Directions() -> std::array<Point, 8> {
+    return {Point{1, 0, 0}, {-1, 0, 0}, {0, 1, 0},
+            {0, -1, 0},     {0, 0, 1},  {0, 0, -1}};
   }
 };
 
@@ -229,8 +261,8 @@ struct LoopErasedRandomWalkGenerator {
   }
 };
 
-  template <class ExecutionPolicy, NumberGenerator RNG, Graph G,
-	    WalkGeneratorFactory<RNG, typename G::Point> GeneratorFactory>
+template <class ExecutionPolicy, NumberGenerator RNG, Graph G,
+          WalkGeneratorFactory<RNG, typename G::Point> GeneratorFactory>
 auto compute_average_length(ExecutionPolicy policy, RNG seedRNG,
                             GeneratorFactory generator_factory, size_t N)
     -> double {
