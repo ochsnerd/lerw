@@ -1,9 +1,9 @@
 #pragma once
 
 #include <optional>
-#include <unordered_set>
 
 #include "concepts.hpp"
+#include "gtl/phmap.hpp"
 
 namespace lerw {
 
@@ -30,18 +30,11 @@ template <Lattice G, Stopper<typename G::Point> Stop, Stepper<G> Step>
 struct LoopErasedRandomWalkGenerator {
   Stop stopper;
   Step stepper;
-  std::optional<size_t> expected_size = std::nullopt;
 
   constexpr auto operator()() -> auto {
     using Point = G::Point;
-    std::unordered_set<Point, typename Point::Hash> visited{G::Zero()};
+    gtl::flat_hash_set<Point, typename Point::Hash> visited{G::Zero()};
     std::vector<Point> walk{G::Zero()};
-
-    if (expected_size) {
-      // Measure: theres also rehash, and bucket_size
-      visited.reserve(*expected_size);
-      walk.reserve(*expected_size);
-    }
 
     while (not stopper(walk)) {
       auto proposed = stepper(walk.back());
