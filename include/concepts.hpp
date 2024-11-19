@@ -9,11 +9,6 @@ concept NumberGenerator = requires(T t) {
   { t() } -> std::same_as<unsigned long>;
 };
 
-template <class Generator, class U>
-concept WalkGenerator = requires(Generator t) {
-  { t() } -> std::same_as<std::vector<U>>;
-};
-
 // TODO: Use this?
 template <class F, class U>
 concept Factory = requires(F f) {
@@ -28,30 +23,30 @@ concept Indexable = requires(C container, std::size_t i) {
   requires std::same_as<std::remove_cvref_t<decltype(container[i])>, T>;
 };
 
-template <class T>
-concept Point = std::equality_comparable<T> && requires(T p1, T p2) {
-  { p1 + p2 } -> std::same_as<T>;
+template <class P>
+concept Point = std::equality_comparable<P> && requires(P p1, P p2) {
+  { p1 + p2 } -> std::same_as<P>;
   { p1.L2Sq() } -> std::convertible_to<double>;
   { p1.L1() } -> std::convertible_to<double>;
   // TODO: Hashable
 };
 
-template <class T>
-concept Graph = requires(T) {
-  typename T::Point;
-  requires Point<typename T::Point>;
-  { T::Zero() } -> std::same_as<typename T::Point>;
-  requires Indexable<decltype(T::Directions()), typename T::Point>;
+template <class L>
+concept Lattice = requires(L) {
+  typename L::Point;
+  requires Point<typename L::Point>;
+  { L::Zero() } -> std::same_as<typename L::Point>;
+  requires Indexable<decltype(L::Directions()), typename L::Point>;
 };
 
-template <class T, class G>
-concept Stepper = Graph<G> && requires(T stepper, G::Point p) {
-  { stepper(p) } -> std::same_as<typename G::Point>;
+template <class T, class L>
+concept Stepper = Lattice<L> && requires(T stepper, L::Point p) {
+  { stepper(p) } -> std::same_as<typename L::Point>;
 };
 
 template <class T, class P>
-concept Stopper = Point<P> && requires(T t, std::vector<P> walk) {
-  { t(walk) } -> std::same_as<bool>;
+concept Stopper = Point<P> && requires(T stopper, std::vector<P> walk) {
+  { stopper(walk) } -> std::same_as<bool>;
 };
 
 } // namespace lerw

@@ -7,14 +7,14 @@
 
 namespace lerw {
 
-template <Graph G, Stopper<typename G::Point> Stop, Stepper<G> Step>
+template <Lattice L, Stopper<typename L::Point> Stop, Stepper<L> Step>
 struct RandomWalkGenerator {
   Stop stopper;
   Step stepper;
   std::optional<size_t> expected_size = std::nullopt;
 
   constexpr auto operator()() -> auto {
-    std::vector<typename G::Point> walk{G::Zero()};
+    std::vector<typename L::Point> walk{L::Zero()};
 
     if (expected_size)
       walk.reserve(*expected_size);
@@ -26,7 +26,7 @@ struct RandomWalkGenerator {
   }
 };
 
-template <Graph G, Stopper<typename G::Point> Stop, Stepper<G> Step>
+template <Lattice G, Stopper<typename G::Point> Stop, Stepper<G> Step>
 struct LoopErasedRandomWalkGenerator {
   Stop stopper;
   Step stepper;

@@ -17,7 +17,6 @@ using namespace lerw;
 namespace po = boost::program_options;
 
 auto main(int argc, char *argv[]) -> int {
-  constexpr static int Dimension = 3;
   // Default values
   size_t n_samples = 1000;  // number of samples for averaging
   size_t max_exponent = 11; // maximum exponent of distance (2^10 = 1024)

@@ -31,6 +31,7 @@ struct Lattice3D {
 
     auto operator==(const Point &) const -> bool = default;
   };
+
   consteval static auto Zero() -> Point { return {0, 0, 0}; }
 
   consteval static auto Directions() -> std::array<Point, 8> {
@@ -39,14 +40,13 @@ struct Lattice3D {
   }
 };
 
-template <size_t Dimension> struct Lattice {
-
+template <std::size_t N> struct LatticeND {
   struct Point {
-    std::array<int, Dimension> values;
+    std::array<int, N> values;
 
     constexpr auto operator+(const Point &other) const -> Point {
       Point res{};
-      for (size_t i = 0; i < Dimension; ++i)
+      for (size_t i = 0; i < N; ++i)
         res.values[i] = values[i] + other.values[i];
       return res;
     }
@@ -62,7 +62,6 @@ template <size_t Dimension> struct Lattice {
                                    std::plus{}, abs{});
     }
 
-    // TODO: specialize std::hash
     struct Hash {
       constexpr std::size_t operator()(const Point &vec) const {
         std::size_t hashValue = 0;
@@ -80,14 +79,14 @@ template <size_t Dimension> struct Lattice {
   consteval static auto Zero() -> Point {
     // TODO: std::views::repeat?
     Point res{};
-    for (size_t i = 0; i < Dimension; ++i)
+    for (size_t i = 0; i < N; ++i)
       res.values[i] = 0;
     return res;
   }
 
-  consteval static auto Directions() -> std::array<Point, 2 * Dimension> {
-    auto directions = std::array<Point, 2 * Dimension>{};
-    for (size_t i = 0; i < 2 * Dimension; ++i) {
+  consteval static auto Directions() -> std::array<Point, 2 * N> {
+    auto directions = std::array<Point, 2 * N>{};
+    for (size_t i = 0; i < 2 * N; ++i) {
       directions[i].values[i / 2] = i % 2 ? -1 : 1;
     }
     return directions;
