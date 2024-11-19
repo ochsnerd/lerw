@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "concepts.hpp"
+#include "concepts.hpp" // IWYU pragma: keep
 
 namespace lerw {
 

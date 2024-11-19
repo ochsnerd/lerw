@@ -2,8 +2,8 @@
 
 #include <optional>
 
-#include "concepts.hpp"
-#include "gtl/phmap.hpp"
+#include "concepts.hpp" // IWYU pragma: keep
+#include <gtl/phmap.hpp>
 
 namespace lerw {
 
@@ -26,15 +26,15 @@ struct RandomWalkGenerator {
   }
 };
 
-template <Lattice G, Stopper<typename G::Point> Stop, Stepper<G> Step>
+template <Lattice L, Stopper<typename L::Point> Stop, Stepper<L> Step>
 struct LoopErasedRandomWalkGenerator {
   Stop stopper;
   Step stepper;
 
   constexpr auto operator()() -> auto {
-    using Point = G::Point;
-    gtl::flat_hash_set<Point, typename Point::Hash> visited{G::Zero()};
-    std::vector<Point> walk{G::Zero()};
+    using Point = L::Point;
+    gtl::flat_hash_set<Point, typename Point::Hash> visited{L::Zero()};
+    std::vector<Point> walk{L::Zero()};
 
     while (not stopper(walk)) {
       auto proposed = stepper(walk.back());

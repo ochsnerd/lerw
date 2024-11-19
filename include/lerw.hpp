@@ -4,7 +4,7 @@
 #include <numeric>
 #include <vector>
 
-#include "concepts.hpp"
+#include "concepts.hpp" // IWYU pragma: keep
 
 namespace lerw {
 
@@ -22,7 +22,7 @@ auto compute_average_length(GeneratorFactory generator_factory, size_t N)
              std::execution::par_unseq, generators.begin(), generators.end(),
              0.0, std::plus{},
              [](auto &generator) { return generator().size(); }) /
-         N;
+    static_cast<double>(N);
 }
 
 } // namespace lerw

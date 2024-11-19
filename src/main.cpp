@@ -1,11 +1,10 @@
 #include <boost/program_options.hpp>
-#include <execution>
 #include <iostream>
 #include <random>
 #include <ranges>
 #include <utility>
 
-#include "concepts.hpp"
+#include "concepts.hpp" // IWYU pragma: keep
 #include "generator.hpp"
 #include "lattice.hpp"
 #include "lerw.hpp"
@@ -19,7 +18,7 @@ namespace po = boost::program_options;
 auto main(int argc, char *argv[]) -> int {
   // Default values
   size_t n_samples = 1000;  // number of samples for averaging
-  size_t max_exponent = 11; // maximum exponent of distance (2^10 = 1024)
+  size_t max_exponent = 10; // maximum exponent of distance (2^10 = 1024)
   size_t N = 8;             // number of distances
 
   po::options_description desc("Allowed options");

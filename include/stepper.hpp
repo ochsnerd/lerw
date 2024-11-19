@@ -2,7 +2,7 @@
 
 #include <random>
 
-#include "concepts.hpp"
+#include "concepts.hpp" // IWYU pragma: keep
 
 namespace lerw {
 
@@ -11,7 +11,7 @@ template <NumberGenerator RNG, Lattice G> struct SimpleStepper {
       0, G::Directions().size() - 1};
   RNG rng;
 
-  explicit SimpleStepper(RNG &&rng) : rng{std::move(rng)} {};
+  explicit SimpleStepper(RNG &&gen) : rng{std::move(gen)} {};
 
   auto operator()(const G::Point &p) -> G::Point {
     return p + G::Directions()[distribution(rng)];
