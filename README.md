@@ -21,7 +21,4 @@ mkdir build && cd build && cmake .. && cp compile_commands.json .. && cd .. && r
 
 # TODO
 
-- write makefile
-- 3-D (or N-D?)
-- check performance
-- parallelize (careful with RNG) (idea: copy-constructor of stepper which randomizes state)
+- implement interesting generalizations (long-range interactions, different grids)
