@@ -21,7 +21,7 @@ struct L1DistanceStopper {
 
   template <Point P>
   constexpr auto operator()(const std::vector<P> &walk) const -> bool {
-    return walk.back().L1() > distance;
+    return l1(walk.back()) > distance;
   }
 };
 
@@ -32,7 +32,7 @@ struct L2DistanceStopper {
 
   template <Point P>
   constexpr auto operator()(const std::vector<P> &walk) const -> bool {
-    return walk.back().L2Sq() > distance_sq;
+    return l2sq(walk.back()) > distance_sq;
   }
 };
 

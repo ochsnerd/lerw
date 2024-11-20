@@ -1,12 +1,10 @@
 #include <boost/program_options.hpp>
 #include <iostream>
-#include <random>
 #include <ranges>
 #include <utility>
 
-#include "concepts.hpp" // IWYU pragma: keep
 #include "generator.hpp"
-#include "lattice.hpp"
+#include "point.hpp"
 #include "lerw.hpp"
 #include "stepper.hpp"
 #include "stopper.hpp"
@@ -18,7 +16,7 @@ namespace po = boost::program_options;
 auto main(int argc, char *argv[]) -> int {
   // Default values
   size_t n_samples = 1000;  // number of samples for averaging
-  size_t max_exponent = 10; // maximum exponent of distance (2^10 = 1024)
+  size_t max_exponent = 11; // maximum exponent of distance (2^10 = 1024)
   size_t N = 8;             // number of distances
 
   po::options_description desc("Allowed options");
@@ -53,6 +51,8 @@ auto main(int argc, char *argv[]) -> int {
 
   std::mt19937 seed_rng{42};
 
+  using P = Point3D;
+
   // Generate powers of 2 starting from 2^(max_exponent-N+1) up to
   // 2^max_exponent
   for (auto [d, l] :
@@ -63,14 +63,12 @@ auto main(int argc, char *argv[]) -> int {
              // ad-hoc factories
              auto make_stopper = [d] { return L2DistanceStopper{d}; };
              auto make_stepper = [&seed_rng] {
-               return SimpleStepper<std::mt19937, Lattice3D>{
-                   std::mt19937{seed_rng()}};
+               return SimpleStepper<std::mt19937, P>{std::mt19937{seed_rng()}};
              };
              auto make_generator = [&make_stopper, &make_stepper] {
                return LoopErasedRandomWalkGenerator<
-                   Lattice3D, L2DistanceStopper,
-                   SimpleStepper<std::mt19937, Lattice3D>>{make_stopper(),
-                                                           make_stepper()};
+                   P, L2DistanceStopper, SimpleStepper<std::mt19937, P>>{
+                   make_stopper(), make_stepper()};
              };
              return std::make_pair(
                  d, compute_average_length(make_generator, n_samples));

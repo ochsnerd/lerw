@@ -6,15 +6,16 @@
 
 namespace lerw {
 
-template <NumberGenerator RNG, Lattice G> struct SimpleStepper {
-  std::uniform_int_distribution<uint8_t> distribution{
-      0, G::Directions().size() - 1};
+template <NumberGenerator RNG, Point P> struct SimpleStepper {
+  std::uniform_int_distribution<std::size_t> distribution{
+    0, directions<P>().size() - 1};
   RNG rng;
 
   explicit SimpleStepper(RNG &&gen) : rng{std::move(gen)} {};
 
-  auto operator()(const G::Point &p) -> G::Point {
-    return p + G::Directions()[distribution(rng)];
+  auto operator()(const P &p) -> P {
+    // TODO: we could do the distribution here, then the whole class does not have to be templated
+    return add(p, directions<P>()[distribution(rng)]);
   }
 };
 

@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
+# including gtl as a system dependency prevents warnings when compiling it
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/gtl/include)
 
 add_executable(lerw src/main.cpp)
