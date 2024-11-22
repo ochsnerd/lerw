@@ -5,6 +5,7 @@
 namespace lerw {
 
 template <class RNG, class Point> struct SimpleStepper {
+  using Point_t = Point;
   std::uniform_int_distribution<std::size_t> distribution{
       0, Point::Directions().size() - 1};
   RNG rng;

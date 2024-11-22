@@ -1,23 +1,16 @@
 #pragma once
 
-#include <optional>
-
 #include <gtl/phmap.hpp>
 
 namespace lerw {
 
-template <class T> consteval auto zero() -> T;
-
-template <class Point, class Stop, class Step> struct RandomWalkGenerator {
-  Stop stopper;
-  Step stepper;
-  std::optional<size_t> expected_size = std::nullopt;
+template <class Stopper, class Stepper> struct RandomWalkGenerator {
+  Stopper stopper;
+  Stepper stepper;
 
   constexpr auto operator()() -> auto {
+    using Point = Stepper::Point_t;
     std::vector<Point> walk{Point::Zero()};
-
-    if (expected_size)
-      walk.reserve(*expected_size);
 
     while (not stopper(walk))
       walk.emplace_back(stepper(walk.back()));
@@ -26,12 +19,13 @@ template <class Point, class Stop, class Step> struct RandomWalkGenerator {
   }
 };
 
-template <class Point, class Stop, class Step>
+template <class Stopper, class Stepper>
 struct LoopErasedRandomWalkGenerator {
-  Stop stopper;
-  Step stepper;
+  Stopper stopper;
+  Stepper stepper;
 
   constexpr auto operator()() -> auto {
+    using Point = Stepper::Point_t;
     gtl::flat_hash_set<Point> visited{Point::Zero()};
     std::vector<Point> walk{Point::Zero()};
 

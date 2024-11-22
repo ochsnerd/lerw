@@ -56,16 +56,13 @@ auto main(int argc, char *argv[]) -> int {
        std::ranges::iota_view(max_exponent - N + 1, max_exponent + 1) |
            std::views::transform([](auto exp) { return std::pow(2.0, exp); }) |
            std::views::drop_while([](auto d) { return d < 500; })) {
-    using P = Point3D;
     // ad-hoc factories
     auto make_stopper = [d] { return L2DistanceStopper{d}; };
     auto make_stepper = [&seed_rng] {
-      return SimpleStepper<std::mt19937, P>{std::mt19937{seed_rng()}};
+      return SimpleStepper<std::mt19937, Point3D>{std::mt19937{seed_rng()}};
     };
     auto make_generator = [&make_stopper, &make_stepper] {
-      return LoopErasedRandomWalkGenerator<P, L2DistanceStopper,
-                                           SimpleStepper<std::mt19937, P>>{
-          make_stopper(), make_stepper()};
+      return LoopErasedRandomWalkGenerator{make_stopper(), make_stepper()};
     };
     auto l = compute_average_length(make_generator, n_samples);
     std::cout << d << ", " << l << '\n';
