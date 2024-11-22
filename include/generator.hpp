@@ -14,7 +14,7 @@ template <class Point, class Stop, class Step> struct RandomWalkGenerator {
   std::optional<size_t> expected_size = std::nullopt;
 
   constexpr auto operator()() -> auto {
-    std::vector<Point> walk{zero<Point>()};
+    std::vector<Point> walk{Point::Zero()};
 
     if (expected_size)
       walk.reserve(*expected_size);
@@ -32,8 +32,8 @@ struct LoopErasedRandomWalkGenerator {
   Step stepper;
 
   constexpr auto operator()() -> auto {
-    gtl::flat_hash_set<Point> visited{zero<Point>()};
-    std::vector<Point> walk{zero<Point>()};
+    gtl::flat_hash_set<Point> visited{Point::Zero()};
+    std::vector<Point> walk{Point::Zero()};
 
     while (not stopper(walk)) {
       auto proposed = stepper(walk.back());

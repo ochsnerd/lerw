@@ -1,32 +1,38 @@
 #pragma once
 
-#include <vector>
+#include <array>
+#include <unordered_set> // IWYU pragma: keep // std::hash
 
 #include "utils.hpp"
 
 namespace lerw {
-
-template <class T> consteval auto zero() -> T;
-template <class T> constexpr auto directions() -> std::vector<T>;
 
 struct Point3D {
   int x;
   int y;
   int z;
 
-  auto operator==(const Point3D &) const -> bool = default;
+  constexpr auto operator+=(const Point3D &rhs) -> Point3D & {
+    x += rhs.x;
+    y += rhs.y;
+    z += rhs.z;
+    return *this;
+  }
+
+  constexpr friend auto operator+(Point3D lhs, const Point3D &rhs) -> Point3D {
+    lhs += rhs;
+    return lhs;
+  }
+
+  constexpr auto operator==(const Point3D &) const -> bool = default;
+
+  consteval static auto Zero() -> Point3D { return {0, 0, 0}; }
+
+  consteval static auto Directions() -> std::array<Point3D, 8> {
+    return {Point3D{1, 0, 0}, {-1, 0, 0}, {0, 1, 0},
+            {0, -1, 0},       {0, 0, 1},  {0, 0, -1}};
+  }
 };
-
-template <> consteval auto zero() -> Point3D { return {0, 0, 0}; }
-
-template <> constexpr auto directions() -> std::vector<Point3D> {
-  return {Point3D{1, 0, 0}, {-1, 0, 0}, {0, 1, 0},
-          {0, -1, 0},       {0, 0, 1},  {0, 0, -1}};
-}
-
-constexpr auto add(const Point3D &p1, const Point3D &p2) -> Point3D {
-  return {p1.x + p2.x, p1.y + p2.y, p1.z + p2.z};
-}
 
 constexpr auto l2sq(const Point3D &p) -> double {
   return p.x * p.x + p.y * p.y + p.z * p.z;
