@@ -3,10 +3,9 @@
 #include <random>
 #include <ranges>
 
-#include "generator.hpp"
 #include "lerw.hpp"
+#include "point.hpp"
 #include "stepper.hpp"
-#include "stopper.hpp"
 
 #include <map>
 
@@ -36,8 +35,8 @@ void show_pareto() {
 
 auto main(int argc, char *argv[]) -> int {
   // Default values
-  std::size_t n_samples = 10000; // number of samples for averaging
-  std::size_t max_exponent = 11; // maximum exponent of distance (2^10 = 1024)
+  std::size_t n_samples = 1000;  // number of samples for averaging
+  std::size_t max_exponent = 10; // maximum exponent of distance (2^10 = 1024)
   std::size_t N = 8;             // number of distances
   double alpha = 0.5;            // shape parameter
 
@@ -78,24 +77,25 @@ auto main(int argc, char *argv[]) -> int {
     return 1;
   }
 
-  std::mt19937 seed_rng{42};
-
   // Generate powers of 2 starting from 2^(max_exponent-N+1) up to
   // 2^max_exponent, dropping anything lower than 500 (too short)
-  for (auto d :
-       std::ranges::iota_view(max_exponent - N + 1, max_exponent + 1) |
-           std::views::transform([](auto exp) { return std::pow(2.0, exp); }) |
-           std::views::drop_while([](auto d) { return d < 500; })) {
-    // ad-hoc factories
-    auto make_stopper = [d] { return L2DistanceStopper{d}; };
-    auto make_stepper = [&seed_rng, alpha] {
-      // return SimpleStepper<std::mt19937, Point3D>{std::mt19937{seed_rng()}};
-      return LongRangeStepper1D{std::mt19937{seed_rng()}, alpha};
-    };
-    auto make_generator = [&make_stopper, &make_stepper] {
-      return LoopErasedRandomWalkGenerator{make_stopper(), make_stepper()};
-    };
-    auto l = compute_average_length(make_generator, n_samples);
+  auto distances =
+      std::ranges::iota_view(max_exponent - N + 1, max_exponent + 1) |
+      std::views::transform([](auto exp) { return std::pow(2.0, exp); }) |
+      std::views::drop_while([](auto d) { return d < 500; }) |
+      std::ranges::to<std::vector<double>>();
+
+  auto seed_rng = std::mt19937{42};
+  auto stepper_factory = [&seed_rng] {
+    return NearestNeighborStepper<std::mt19937, Point3D>{
+        std::mt19937{seed_rng()}};
+  };
+  // auto stepper_factory =
+  //   [&seed_rng, alpha] { return LongRangeStepper1D{std::mt19937{seed_rng()},
+  //   alpha}; };
+
+  for (auto [d, l] :
+       compute_lerw_average_lengths(stepper_factory, distances, n_samples)) {
     std::cout << d << ", " << l << '\n';
   }
 }

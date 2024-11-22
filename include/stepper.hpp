@@ -11,13 +11,13 @@
 
 namespace lerw {
 
-template <class Rng, class P> struct SimpleStepper {
+template <class Rng, class P> struct NearestNeighborStepper {
   using Point = P;
   std::uniform_int_distribution<std::size_t> distribution{
       0, P::Directions().size() - 1};
   Rng rng;
 
-  explicit SimpleStepper(Rng &&gen) : rng{std::move(gen)} {};
+  explicit NearestNeighborStepper(Rng &&gen) : rng{std::move(gen)} {};
 
   auto operator()(const Point &p) -> Point {
     return p + P::Directions()[distribution(rng)];
@@ -55,6 +55,6 @@ template <class Rng> struct LongRangeStepper1D {
   auto direction() -> Point::Field_t { return direction_(rng_) * 2 - 1; }
 };
 
-// maybe helpful?
+// potentially helpful?
 // https://www.boost.org/doc/libs/1_86_0/doc/html/doxygen/headers/classboost_1_1random_1_1uniform__on__sphere.html
 } // namespace lerw

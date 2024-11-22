@@ -2,7 +2,12 @@
 #include <execution>
 #include <functional>
 #include <numeric>
+#include <random>
 #include <vector>
+
+#include "generator.hpp"
+#include "stepper.hpp"
+#include "stopper.hpp"
 
 namespace lerw {
 
@@ -21,6 +26,23 @@ auto compute_average_length(GeneratorFactory generator_factory, size_t N)
              0.0, std::plus{},
              [](auto &generator) { return generator().size(); }) /
          static_cast<double>(N);
+}
+
+template <class StepperFactory>
+auto compute_lerw_average_lengths(StepperFactory &&stepper_factory,
+                                  const std::vector<double> &distances,
+                                  std::size_t n_samples) -> auto {
+  auto results = std::vector<std::pair<double, double>>{};
+  for (const auto &d : distances) {
+    auto stopper_factory = [d] { return L2DistanceStopper{d}; };
+    auto generator_factory = [&stopper_factory, &stepper_factory] {
+      return LoopErasedRandomWalkGenerator{stopper_factory(),
+                                           stepper_factory()};
+    };
+    auto l = compute_average_length(generator_factory, n_samples);
+    results.emplace_back(d, l);
+  }
+  return results;
 }
 
 } // namespace lerw
