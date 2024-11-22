@@ -3,8 +3,6 @@
 #include <cstddef>
 #include <vector>
 
-#include "concepts.hpp" // IWYU pragma: keep
-
 namespace lerw {
 
 struct LengthStopper {
@@ -19,8 +17,8 @@ struct LengthStopper {
 struct L1DistanceStopper {
   double distance;
 
-  template <Point P>
-  constexpr auto operator()(const std::vector<P> &walk) const -> bool {
+  template <class Point>
+  constexpr auto operator()(const std::vector<Point> &walk) const -> bool {
     return l1(walk.back()) > distance;
   }
 };
@@ -30,8 +28,8 @@ struct L2DistanceStopper {
 
   L2DistanceStopper(double distance) : distance_sq{distance * distance} {}
 
-  template <Point P>
-  constexpr auto operator()(const std::vector<P> &walk) const -> bool {
+  template <class Point>
+  constexpr auto operator()(const std::vector<Point> &walk) const -> bool {
     return l2sq(walk.back()) > distance_sq;
   }
 };

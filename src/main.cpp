@@ -1,7 +1,6 @@
 #include <boost/program_options.hpp>
 #include <iostream>
 #include <ranges>
-#include <utility>
 
 #include "generator.hpp"
 #include "lerw.hpp"
