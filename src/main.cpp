@@ -1,22 +1,45 @@
 #include <boost/program_options.hpp>
 #include <iostream>
+#include <random>
 #include <ranges>
 
 #include "generator.hpp"
 #include "lerw.hpp"
-#include "point.hpp"
 #include "stepper.hpp"
 #include "stopper.hpp"
+
+#include <map>
 
 using namespace lerw;
 
 namespace po = boost::program_options;
 
+// Print a histogram of the pareto distribution as a sanity check
+// https://en.wikipedia.org/wiki/Pareto_distribution
+// https://www.boost.org/doc/libs/1_86_0/libs/math/doc/html/math_toolkit/dist_ref/dists/pareto.html
+void show_pareto() {
+  const auto n = 10000;
+  auto stepper = LongRangeStepper1D{std::mt19937{}, 0.5};
+
+  std::map<long, std::size_t> occurences{};
+  for (auto t :
+       std::views::iota(1, n) | std::views::transform([&stepper](auto) {
+         return stepper.pareto();
+       })) {
+    occurences[t]++;
+  }
+
+  for (const auto &[value, number] : occurences) {
+    std::cout << value << std::string(number, '*') << '\n';
+  }
+}
+
 auto main(int argc, char *argv[]) -> int {
   // Default values
-  size_t n_samples = 1000;  // number of samples for averaging
-  size_t max_exponent = 11; // maximum exponent of distance (2^10 = 1024)
-  size_t N = 8;             // number of distances
+  std::size_t n_samples = 10000; // number of samples for averaging
+  std::size_t max_exponent = 11; // maximum exponent of distance (2^10 = 1024)
+  std::size_t N = 8;             // number of distances
+  double alpha = 0.5;            // shape parameter
 
   po::options_description desc("Allowed options");
   desc.add_options()("help", "produce help message")(
@@ -26,7 +49,9 @@ auto main(int argc, char *argv[]) -> int {
       po::value<size_t>(&max_exponent)->default_value(max_exponent),
       "maximum exponent e for distance sampling (will sample from 2^(e-N+1) to "
       "2^e)")("intervals,n", po::value<size_t>(&N)->default_value(N),
-              "number of distance intervals to sample");
+              "number of distance intervals to sample")(
+      "alpha,a", po::value<double>(&alpha)->default_value(alpha),
+      "shape parameter (must be > 0)");
 
   po::variables_map vm;
   try {
@@ -48,6 +73,11 @@ auto main(int argc, char *argv[]) -> int {
     return 1;
   }
 
+  if (alpha <= 0) {
+    std::cerr << "Error: alpha must be greater than 0\n";
+    return 1;
+  }
+
   std::mt19937 seed_rng{42};
 
   // Generate powers of 2 starting from 2^(max_exponent-N+1) up to
@@ -58,8 +88,9 @@ auto main(int argc, char *argv[]) -> int {
            std::views::drop_while([](auto d) { return d < 500; })) {
     // ad-hoc factories
     auto make_stopper = [d] { return L2DistanceStopper{d}; };
-    auto make_stepper = [&seed_rng] {
-      return SimpleStepper<std::mt19937, Point3D>{std::mt19937{seed_rng()}};
+    auto make_stepper = [&seed_rng, alpha] {
+      // return SimpleStepper<std::mt19937, Point3D>{std::mt19937{seed_rng()}};
+      return LongRangeStepper1D{std::mt19937{seed_rng()}, alpha};
     };
     auto make_generator = [&make_stopper, &make_stepper] {
       return LoopErasedRandomWalkGenerator{make_stopper(), make_stepper()};

@@ -8,7 +8,8 @@
 namespace lerw {
 
 struct Point1D {
-  int x;
+  using Field_t = int64_t;
+  Field_t x;
 
   constexpr auto operator+=(const Point1D &rhs) -> Point1D & {
     x += rhs.x;
@@ -29,9 +30,13 @@ struct Point1D {
   }
 };
 
-constexpr auto l2sq(const Point1D &p) -> double { return p.x * p.x; }
+constexpr auto l2sq(const Point1D &p) -> double {
+  return static_cast<double>(p.x * p.x);
+}
 
-constexpr auto l1(const Point1D &p) -> double { return abs{}(p.x); }
+constexpr auto l1(const Point1D &p) -> double {
+  return static_cast<double>(abs{}(p.x));
+}
 
 struct Point3D {
   int x;
@@ -75,14 +80,14 @@ namespace std {
 
 template <> struct hash<lerw::Point1D> {
   constexpr auto operator()(const lerw::Point1D &p) const -> std::size_t {
-    return std::hash<int>()(p.x);
+    return std::hash<lerw::Point1D::Field_t>{}(p.x);
   }
 };
 
 template <> struct hash<lerw::Point3D> {
   constexpr auto operator()(const lerw::Point3D &p) const -> std::size_t {
-    return std::hash<int>()(p.x) ^ std::hash<int>()(p.y << 16) ^
-           std::hash<int>()(p.z << 8);
+    return std::hash<int>{}(p.x) ^ std::hash<int>{}(p.y << 16) ^
+           std::hash<int>{}(p.z << 8);
   }
 };
 
