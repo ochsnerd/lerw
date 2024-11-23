@@ -7,11 +7,12 @@
 #include <limits>
 #include <random>
 
+#include "concepts.hpp" // IWYU pragma: keep
 #include "point.hpp"
 
 namespace lerw {
 
-template <class Rng, class P> struct NearestNeighborStepper {
+template <class Rng, point P> struct NearestNeighborStepper {
   using Point = P;
   std::uniform_int_distribution<std::size_t> distribution{
       0, P::Directions().size() - 1};

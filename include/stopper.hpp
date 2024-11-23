@@ -30,7 +30,7 @@ struct L2DistanceStopper {
 
   template <class Point>
   constexpr auto operator()(const std::vector<Point> &walk) const -> bool {
-    return l2sq(walk.back()) > distance_sq;
+    return walk.back().l2sq() > distance_sq;
   }
 };
 
