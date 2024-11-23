@@ -2,15 +2,16 @@
 
 #include <gtl/phmap.hpp>
 
+#include "concepts.hpp" // IWYU pragma: keep
+
 namespace lerw {
 
-template <class Stopper, class Stepper> struct RandomWalkGenerator {
+template <stopper Stopper, stepper Stepper> struct RandomWalkGenerator {
   Stopper stopper;
   Stepper stepper;
 
   constexpr auto operator()() -> auto {
-    using Point = Stepper::Point;
-    std::vector<Point> walk{Point::Zero()};
+    std::vector walk{Stepper::Point::Zero()};
 
     while (not stopper(walk))
       walk.emplace_back(stepper(walk.back()));
@@ -19,15 +20,16 @@ template <class Stopper, class Stepper> struct RandomWalkGenerator {
   }
 };
 
-template <class Stopper, class Stepper>
+template <stopper Stopper, stepper Stepper>
 struct LoopErasedRandomWalkGenerator {
   Stopper stopper;
   Stepper stepper;
 
   constexpr auto operator()() -> auto {
     using Point = Stepper::Point;
-    gtl::flat_hash_set<Point> visited{Point::Zero()};
-    std::vector<Point> walk{Point::Zero()};
+    const auto zero = Point::Zero();
+    gtl::flat_hash_set<Point> visited{zero};
+    std::vector walk{zero};
 
     while (not stopper(walk)) {
       auto proposed = stepper(walk.back());

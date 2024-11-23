@@ -21,6 +21,9 @@ struct Point1D {
     return lhs;
   }
 
+  constexpr auto l2sq() const -> double { return static_cast<double>(x * x); }
+  constexpr auto l1() const -> double { return static_cast<double>(abs{}(x)); }
+
   constexpr auto operator==(const Point1D &) const -> bool = default;
 
   consteval static auto Zero() -> Point1D { return {0}; }
@@ -29,14 +32,6 @@ struct Point1D {
     return {Point1D{1}, {-1}};
   }
 };
-
-constexpr auto l2sq(const Point1D &p) -> double {
-  return static_cast<double>(p.x * p.x);
-}
-
-constexpr auto l1(const Point1D &p) -> double {
-  return static_cast<double>(abs{}(p.x));
-}
 
 struct Point3D {
   int x;
@@ -55,6 +50,15 @@ struct Point3D {
     return lhs;
   }
 
+  constexpr auto l2sq() const -> double {
+    return static_cast<double>(x * x + y * y + z * z);
+  }
+
+  constexpr auto l1() const -> double {
+    constexpr auto a = abs{};
+    return static_cast<double>(a(x) + a(y) + a(z));
+  }
+
   constexpr auto operator==(const Point3D &) const -> bool = default;
 
   consteval static auto Zero() -> Point3D { return {0, 0, 0}; }
@@ -64,15 +68,6 @@ struct Point3D {
             {0, -1, 0},       {0, 0, 1},  {0, 0, -1}};
   }
 };
-
-constexpr auto l2sq(const Point3D &p) -> double {
-  return p.x * p.x + p.y * p.y + p.z * p.z;
-}
-
-constexpr auto l1(const Point3D &p) -> double {
-  constexpr auto a = abs{};
-  return a(p.x) + a(p.y) + a(p.z);
-}
 
 } // namespace lerw
 
