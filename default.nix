@@ -5,6 +5,7 @@ let
     numpy
     matplotlib
     pandas
+    scipy
   ]);
 in
 gcc14Stdenv.mkDerivation {
