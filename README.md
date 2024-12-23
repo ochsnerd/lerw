@@ -1,12 +1,17 @@
 # Build & Run
 
-(inside the nix-shell)
+Install nix, then inside the nix-shell:
 
 ```bash
 nix-build
 ./result/lerw >> results.csv
 python plot.py results.csv
 ```
+
+or
+
+- Check the CMakeLists.txt for dependencies (boost, tbb)
+- `mkdir build && cd build && cmake .. && make`
 
 # LSP
 
@@ -21,4 +26,7 @@ mkdir build && cd build && cmake .. && cp compile_commands.json .. && cd .. && r
 
 # TODO
 
-- implement interesting generalizations (long-range interactions, different grids)
+- write makefile to programmatically compute plot for alpha
+- Find abstraction for steppers
+- Refactor Point?
+- Visualize walk
