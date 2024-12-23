@@ -86,13 +86,13 @@ auto main(int argc, char *argv[]) -> int {
       std::ranges::to<std::vector<double>>();
 
   auto seed_rng = std::mt19937{42};
-  auto stepper_factory = [&seed_rng] {
-    return NearestNeighborStepper<std::mt19937, Point3D>{
-        std::mt19937{seed_rng()}};
+  // auto stepper_factory = [&seed_rng] {
+  //   return NearestNeighborStepper<std::mt19937, Point3D>{
+  //       std::mt19937{seed_rng()}};
+  // };
+  auto stepper_factory = [&seed_rng, alpha] {
+    return LongRangeStepper3D{std::mt19937{seed_rng()}, alpha};
   };
-  // auto stepper_factory =
-  //   [&seed_rng, alpha] { return LongRangeStepper1D{std::mt19937{seed_rng()},
-  //   alpha}; };
 
   for (auto [d, l] :
        compute_lerw_average_lengths(stepper_factory, distances, n_samples)) {
