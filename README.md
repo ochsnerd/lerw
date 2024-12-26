@@ -26,7 +26,8 @@ mkdir build && cd build && cmake .. && cp compile_commands.json .. && cd .. && r
 
 # TODO
 
-- write makefile to programmatically compute plot for alpha
-- Find abstraction for steppers
+- test (give seed as arg, check that some basic setup is correct)
+- update makefile (copy into location for interface.py)
+- write abstractions for stepper
 - Refactor Point?
 - Visualize walk
