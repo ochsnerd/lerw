@@ -2,13 +2,15 @@
 #pragma GCC diagnostic ignored "-Wnull-dereference"
 #include <boost/program_options.hpp>
 #pragma GCC diagnostic pop
-#include "lerw.hpp"
-#include "stepper.hpp"
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <random>
 #include <ranges>
+
+#include "lerw.hpp"
+#include "stepper.hpp"
 
 using namespace lerw;
 namespace po = boost::program_options;
@@ -33,23 +35,53 @@ void show_pareto() {
   }
 }
 
+enum class Norm { L1, L2, LINFTY };
+
+// Helper functions for norm conversion
+std::string normToString(Norm norm) {
+  switch (norm) {
+  case Norm::L1:
+    return "L1";
+  case Norm::L2:
+    return "L2";
+  case Norm::LINFTY:
+    return "LINFTY";
+  default:
+    throw std::invalid_argument("Invalid norm value");
+  }
+}
+
+// Helper function to parse norm from string
+Norm parseNorm(const std::string &normStr) {
+  if (normStr == "L1")
+    return Norm::L1;
+  if (normStr == "L2")
+    return Norm::L2;
+  if (normStr == "LINFTY")
+    return Norm::LINFTY;
+  throw std::invalid_argument("Invalid norm type. Must be L1, L2, or LINFTY");
+}
+
 auto main(int argc, char *argv[]) -> int {
-  // Default values
-  std::size_t n_samples = 1000;  // number of samples for averaging
-  std::size_t max_exponent = 10; // maximum exponent of distance (2^10 = 1024)
-  std::size_t N = 8;             // number of distances
-  double alpha = 0.5;            // shape parameter
+  Norm norm = Norm::L2;
+  std::size_t dimension = 2;
+  std::size_t N = 1000;   // number of samples
+  double distance = 1000; // distance
+  double alpha = 0.5;     // shape parameter
   std::string output_path;
 
   po::options_description desc("Allowed options");
   desc.add_options()("help", "produce help message")(
-      "samples,s", po::value<size_t>(&n_samples)->default_value(n_samples),
-      "number of samples for averaging")(
-      "max-exponent,e",
-      po::value<size_t>(&max_exponent)->default_value(max_exponent),
-      "maximum exponent e for distance sampling (will sample from 2^(e-N+1) to "
-      "2^e)")("intervals,n", po::value<size_t>(&N)->default_value(N),
-              "number of distance intervals to sample")(
+      "norm,n",
+      po::value<std::string>()->default_value("L2")->notifier(
+          [&norm](const std::string &n) { norm = parseNorm(n); }),
+      "norm (L1, L2, or LINFTY)")(
+      "dimension,D", po::value<size_t>(&dimension)->default_value(dimension),
+      "dimension of the lattice")("number_of_walks,N",
+                                po::value<size_t>(&N)->default_value(N),
+                                "number of walks")(
+      "distance,R", po::value<double>(&distance)->default_value(distance),
+      "distance from the origin when the walk is stopped")(
       "alpha,a", po::value<double>(&alpha)->default_value(alpha),
       "shape parameter (must be > 0)")(
       "output,o", po::value<std::string>(&output_path),
@@ -69,12 +101,6 @@ auto main(int argc, char *argv[]) -> int {
     return 0;
   }
 
-  if (max_exponent < N - 1) {
-    std::cerr << "Error: maximum exponent must be at least " << N - 1
-              << " to accommodate " << N << " intervals\n";
-    return 1;
-  }
-
   if (alpha <= 0) {
     std::cerr << "Error: alpha must be greater than 0\n";
     return 1;
@@ -92,19 +118,14 @@ auto main(int argc, char *argv[]) -> int {
     out = &output_file;
   }
 
-  auto distances =
-      std::ranges::iota_view(max_exponent - N + 1, max_exponent + 1) |
-      std::views::transform([](auto exp) { return std::pow(2.0, exp); }) |
-      std::views::drop_while([](auto d) { return d < 500; }) |
-      std::ranges::to<std::vector<double>>();
-
   auto seed_rng = std::mt19937{42};
   auto stepper_factory = [&seed_rng, alpha] {
     return LongRangeStepper3D{std::mt19937{seed_rng()}, alpha};
   };
 
-  for (auto [d, l] :
-       compute_lerw_average_lengths(stepper_factory, distances, n_samples)) {
-    *out << d << ", " << l << '\n';
+  *out << std::format("# D={}, R={}, N={}, α={}, Norm={}\n", dimension,
+                      distance, N, alpha, normToString(norm));
+  for (auto l : compute_lerw_lengths(stepper_factory, distance, N)) {
+    *out << l << '\n';
   }
 }
