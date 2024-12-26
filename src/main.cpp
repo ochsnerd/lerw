@@ -2,10 +2,10 @@
 #pragma GCC diagnostic ignored "-Wnull-dereference"
 #include <boost/program_options.hpp>
 #pragma GCC diagnostic pop
-#include <format>
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <print>
 #include <random>
 #include <ranges>
 
@@ -123,10 +123,10 @@ auto main(int argc, char *argv[]) -> int {
     return LongRangeStepper3D{std::mt19937{seed_rng()}, alpha};
   };
 
-  *out << std::format("# D={}, R={}, N={}, α={}, Norm={}, seed={}\n", dimension,
-                      distance, N, alpha, normToString(norm), seed);
+  std::println(*out, "# D={}, R={}, N={}, α={}, Norm={}, seed={}", dimension,
+               distance, N, alpha, normToString(norm), seed);
 
   for (auto l : compute_lerw_lengths(stepper_factory, distance, N)) {
-    *out << l << '\n';
+    std::println(*out, "{}", l);
   }
 }
