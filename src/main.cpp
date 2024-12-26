@@ -37,7 +37,6 @@ void show_pareto() {
 
 enum class Norm { L1, L2, LINFTY };
 
-// Helper functions for norm conversion
 std::string normToString(Norm norm) {
   switch (norm) {
   case Norm::L1:
@@ -51,7 +50,6 @@ std::string normToString(Norm norm) {
   }
 }
 
-// Helper function to parse norm from string
 Norm parseNorm(const std::string &normStr) {
   if (normStr == "L1")
     return Norm::L1;
@@ -69,6 +67,7 @@ auto main(int argc, char *argv[]) -> int {
   double distance = 1000; // distance
   double alpha = 0.5;     // shape parameter
   std::string output_path;
+  std::size_t seed = 42; // default seed value
 
   po::options_description desc("Allowed options");
   desc.add_options()("help", "produce help message")(
@@ -78,12 +77,14 @@ auto main(int argc, char *argv[]) -> int {
       "norm (L1, L2, or LINFTY)")(
       "dimension,D", po::value<size_t>(&dimension)->default_value(dimension),
       "dimension of the lattice")("number_of_walks,N",
-                                po::value<size_t>(&N)->default_value(N),
-                                "number of walks")(
+                                  po::value<size_t>(&N)->default_value(N),
+                                  "number of walks")(
       "distance,R", po::value<double>(&distance)->default_value(distance),
       "distance from the origin when the walk is stopped")(
       "alpha,a", po::value<double>(&alpha)->default_value(alpha),
       "shape parameter (must be > 0)")(
+      "seed,s", po::value<std::size_t>(&seed)->default_value(seed),
+      "random number generator seed")(
       "output,o", po::value<std::string>(&output_path),
       "path to output file (if not specified, writes to stdout)");
 
@@ -108,7 +109,6 @@ auto main(int argc, char *argv[]) -> int {
 
   std::ofstream output_file;
   std::ostream *out = &std::cout; // Default to cout
-
   if (vm.count("output")) {
     output_file.open(output_path);
     if (!output_file) {
@@ -118,13 +118,14 @@ auto main(int argc, char *argv[]) -> int {
     out = &output_file;
   }
 
-  auto seed_rng = std::mt19937{42};
+  auto seed_rng = std::mt19937{seed};
   auto stepper_factory = [&seed_rng, alpha] {
     return LongRangeStepper3D{std::mt19937{seed_rng()}, alpha};
   };
 
-  *out << std::format("# D={}, R={}, N={}, α={}, Norm={}\n", dimension,
-                      distance, N, alpha, normToString(norm));
+  *out << std::format("# D={}, R={}, N={}, α={}, Norm={}, seed={}\n", dimension,
+                      distance, N, alpha, normToString(norm), seed);
+
   for (auto l : compute_lerw_lengths(stepper_factory, distance, N)) {
     *out << l << '\n';
   }
