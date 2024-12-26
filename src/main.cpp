@@ -1,16 +1,16 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnull-dereference"
 #include <boost/program_options.hpp>
+#pragma GCC diagnostic pop
+#include "lerw.hpp"
+#include "stepper.hpp"
+#include <fstream>
 #include <iostream>
+#include <map>
 #include <random>
 #include <ranges>
 
-#include "lerw.hpp"
-#include "point.hpp"
-#include "stepper.hpp"
-
-#include <map>
-
 using namespace lerw;
-
 namespace po = boost::program_options;
 
 // Print a histogram of the pareto distribution as a sanity check
@@ -39,6 +39,7 @@ auto main(int argc, char *argv[]) -> int {
   std::size_t max_exponent = 10; // maximum exponent of distance (2^10 = 1024)
   std::size_t N = 8;             // number of distances
   double alpha = 0.5;            // shape parameter
+  std::string output_path;
 
   po::options_description desc("Allowed options");
   desc.add_options()("help", "produce help message")(
@@ -50,9 +51,11 @@ auto main(int argc, char *argv[]) -> int {
       "2^e)")("intervals,n", po::value<size_t>(&N)->default_value(N),
               "number of distance intervals to sample")(
       "alpha,a", po::value<double>(&alpha)->default_value(alpha),
-      "shape parameter (must be > 0)");
+      "shape parameter (must be > 0)")(
+      "output,o", po::value<std::string>(&output_path),
+      "path to output file (if not specified, writes to stdout)");
 
-  po::variables_map vm;
+  boost::program_options::variables_map vm;
   try {
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
@@ -77,8 +80,18 @@ auto main(int argc, char *argv[]) -> int {
     return 1;
   }
 
-  // Generate powers of 2 starting from 2^(max_exponent-N+1) up to
-  // 2^max_exponent, dropping anything lower than 500 (too short)
+  std::ofstream output_file;
+  std::ostream *out = &std::cout; // Default to cout
+
+  if (vm.count("output")) {
+    output_file.open(output_path);
+    if (!output_file) {
+      std::cerr << "Error: Could not open output file: " << output_path << "\n";
+      return 1;
+    }
+    out = &output_file;
+  }
+
   auto distances =
       std::ranges::iota_view(max_exponent - N + 1, max_exponent + 1) |
       std::views::transform([](auto exp) { return std::pow(2.0, exp); }) |
@@ -86,16 +99,12 @@ auto main(int argc, char *argv[]) -> int {
       std::ranges::to<std::vector<double>>();
 
   auto seed_rng = std::mt19937{42};
-  // auto stepper_factory = [&seed_rng] {
-  //   return NearestNeighborStepper<std::mt19937, Point3D>{
-  //       std::mt19937{seed_rng()}};
-  // };
   auto stepper_factory = [&seed_rng, alpha] {
     return LongRangeStepper3D{std::mt19937{seed_rng()}, alpha};
   };
 
   for (auto [d, l] :
        compute_lerw_average_lengths(stepper_factory, distances, n_samples)) {
-    std::cout << d << ", " << l << '\n';
+    *out << d << ", " << l << '\n';
   }
 }
