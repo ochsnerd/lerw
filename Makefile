@@ -1,16 +1,16 @@
-.PHONY: all clean build generate visualize
+.PHONY: all build
 
-all: visualize
+all: build
+
+BUILD_DIR := build
+INSTALL_DIR := bin
 
 build:
-	nix-build
+	cmake -S . -B $(BUILD_DIR)
+	cmake --build $(BUILD_DIR)
 
-generate: build
-	./result/lerw > results.csv
-
-visualize: generate
-	python plot.py results.csv
+install: build
+	cmake --install $(BUILD_DIR) --prefix $(INSTALL_DIR)
 
 clean:
-	rm -f results.csv
-	rm -rf result
+	rm -rf $(BUILD_DIR) $(INSTALL_DIR)

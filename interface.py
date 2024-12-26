@@ -6,8 +6,8 @@ import numpy as np
 import numpy.typing as npt
 
 # relative to the location where this is called from
-DATA_DIR: str = "data"
-CPP_EXECUTABLE: str = "lerw"
+DATA_DIR: Path = Path("data")
+CPP_EXECUTABLE: Path = Path("bin") / "lerw"
 
 
 class Norm(Enum):
@@ -16,23 +16,33 @@ class Norm(Enum):
     L2 = 2
 
 
+def _format_filename(
+    dimension: int,
+    distance: float,
+    number_of_walks: int,
+    alpha: float,
+    norm: Norm,
+    seed: int = 42,
+) -> str:
+    return f"walks_dim{dimension}_dist{distance}_n{number_of_walks}_a{alpha}_{norm.name}_rng{seed}.txt"
+
+
 def get_walk_lengths(
     dimension: int,
     distance: float,
     number_of_walks: int,
     alpha: float,
     norm: Norm,
+    seed: int = 3,
 ) -> npt.NDArray[np.int64]:
     """Get walk lengths from existing file or generate new data using C++ executable.
 
     Arguments match output of "<cpp_exe> --help".
     """
-    data_path = Path(DATA_DIR)
-    data_path.mkdir(exist_ok=True)
+    DATA_DIR.mkdir(exist_ok=True)
 
-    filename = f"walks_dim{dimension}_dist{distance}_n{number_of_walks}_a{alpha}_{norm.name}.txt"
-
-    file_path = data_path / filename
+    filename = _format_filename(dimension, distance, number_of_walks, alpha, norm, seed)
+    file_path = DATA_DIR / filename
 
     if not file_path.exists():
         cmd = [
@@ -49,6 +59,8 @@ def get_walk_lengths(
             norm.name,
             "--output",
             file_path,
+            "--seed",
+            seed,
         ]
 
         result = subprocess.run(
@@ -72,3 +84,26 @@ def get_walk_lengths(
             )
 
     return np.genfromtxt(file_path, dtype=np.int64, comments="#", delimiter="\n")
+
+
+def test():
+    args = {
+        "dimension": 2,
+        "distance": 5000,
+        "number_of_walks": 10,
+        "alpha": 0.9,
+        "norm": Norm.L2,
+        "seed": 2,
+    }
+    file = Path(DATA_DIR) / _format_filename(**args)
+    file.unlink(missing_ok=True)
+
+    walks = get_walk_lengths(**args)
+    assert file.exists()
+    assert len(walks) == 10
+    assert walks[0] == 4236
+    print("all good")
+
+
+if __name__ == "__main__":
+    test()

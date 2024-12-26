@@ -1,6 +1,7 @@
 # build artifacts
-build/*
+build
 result
+bin
 
 # clangd
 compile_commands.json
