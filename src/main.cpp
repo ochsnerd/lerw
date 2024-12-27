@@ -11,6 +11,7 @@
 
 #include "lerw.hpp"
 #include "stepper.hpp"
+#include "utils.hpp"
 
 using namespace lerw;
 namespace po = boost::program_options;
@@ -35,31 +36,6 @@ void show_pareto() {
   }
 }
 
-enum class Norm { L1, L2, LINFTY };
-
-std::string normToString(Norm norm) {
-  switch (norm) {
-  case Norm::L1:
-    return "L1";
-  case Norm::L2:
-    return "L2";
-  case Norm::LINFTY:
-    return "LINFTY";
-  default:
-    throw std::invalid_argument("Invalid norm value");
-  }
-}
-
-Norm parseNorm(const std::string &normStr) {
-  if (normStr == "L1")
-    return Norm::L1;
-  if (normStr == "L2")
-    return Norm::L2;
-  if (normStr == "LINFTY")
-    return Norm::LINFTY;
-  throw std::invalid_argument("Invalid norm type. Must be L1, L2, or LINFTY");
-}
-
 auto main(int argc, char *argv[]) -> int {
   Norm norm = Norm::L2;
   std::size_t dimension = 2;
@@ -73,7 +49,7 @@ auto main(int argc, char *argv[]) -> int {
   desc.add_options()("help", "produce help message")(
       "norm,n",
       po::value<std::string>()->default_value("L2")->notifier(
-          [&norm](const std::string &n) { norm = parseNorm(n); }),
+          [&norm](const std::string &n) { norm = parse_norm(n); }),
       "norm (L1, L2, or LINFTY)")(
       "dimension,D", po::value<size_t>(&dimension)->default_value(dimension),
       "dimension of the lattice")("number_of_walks,N",
@@ -124,7 +100,7 @@ auto main(int argc, char *argv[]) -> int {
   };
 
   std::println(*out, "# D={}, R={}, N={}, α={}, Norm={}, seed={}", dimension,
-               distance, N, alpha, normToString(norm), seed);
+               distance, N, alpha, norm_to_string(norm), seed);
 
   for (auto l : compute_lerw_lengths(stepper_factory, distance, N)) {
     std::println(*out, "{}", l);

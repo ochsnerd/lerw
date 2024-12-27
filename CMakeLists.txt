@@ -56,5 +56,14 @@ target_link_libraries(lerw PRIVATE
   tbb
   boost_program_options)
 
+# testing
+find_package(Catch2 3 REQUIRED)
+add_executable(tests tests/test.cpp)
+target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+
+include(CTest)
+include(Catch)
+catch_discover_tests(tests)
+
 # nix-build wants an 'install' target
 install(TARGETS lerw DESTINATION .)

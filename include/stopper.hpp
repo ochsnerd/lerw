@@ -3,6 +3,9 @@
 #include <cstddef>
 #include <vector>
 
+#include "concepts.hpp"
+#include "utils.hpp"
+
 namespace lerw {
 
 struct LengthStopper {
@@ -14,23 +17,12 @@ struct LengthStopper {
   }
 };
 
-struct L1DistanceStopper {
+template <Norm N> struct DistanceStopper {
   double distance;
 
-  template <class Point>
+  template <point Point>
   constexpr auto operator()(const std::vector<Point> &walk) const -> bool {
-    return l1(walk.back()) > distance;
-  }
-};
-
-struct L2DistanceStopper {
-  double distance_sq;
-
-  L2DistanceStopper(double distance) : distance_sq{distance * distance} {}
-
-  template <class Point>
-  constexpr auto operator()(const std::vector<Point> &walk) const -> bool {
-    return walk.back().l2sq() > distance_sq;
+    return norm<N>(walk.back()) > distance;
   }
 };
 

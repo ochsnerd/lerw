@@ -8,6 +8,7 @@
 
 #include "generator.hpp"
 #include "stopper.hpp"
+#include "utils.hpp"
 
 namespace lerw {
 
@@ -33,8 +34,8 @@ auto compute_lengths(GeneratorFactory generator_factory,
 template <class StepperFactory>
 auto compute_lerw_lengths(StepperFactory &&stepper_factory, double distance,
                           std::size_t n_samples) -> auto {
-  // TODO: Seems strange to build the stopper her and the stepper not (will have to refactor anyway when norm)
-  auto stopper_factory = [distance] { return L2DistanceStopper{distance}; };
+  // TODO: Seems strange to build the stopper here and the stepper not (will have to refactor anyway when norm)
+  auto stopper_factory = [distance] { return DistanceStopper<Norm::L2>{distance}; };
   auto generator_factory = [&stopper_factory, &stepper_factory] {
     return LoopErasedRandomWalkGenerator{stopper_factory(), stepper_factory()};
   };
@@ -57,7 +58,7 @@ auto compute_lerw_average_lengths(StepperFactory &&stepper_factory,
                                   std::size_t n_samples) -> auto {
   auto results = std::vector<std::pair<double, double>>{};
   for (const auto &d : distances) {
-    auto stopper_factory = [d] { return L2DistanceStopper{d}; };
+    auto stopper_factory = [d] { return DistanceStopper<Norm::L2>{d}; };
     auto generator_factory = [&stopper_factory, &stepper_factory] {
       return LoopErasedRandomWalkGenerator{stopper_factory(),
                                            stepper_factory()};

@@ -54,7 +54,7 @@ template <class Rng> struct LongRangeStepper1D {
         sampled,
         static_cast<double>(std::numeric_limits<Point::Field_t>::min()),
         static_cast<double>(std::numeric_limits<Point::Field_t>::max()));
-    return std::llround(clamped);
+    return static_cast<Point::Field_t>(std::round(clamped));
   }
 
   auto direction() -> Point::Field_t { return direction_(rng_) * 2 - 1; }
@@ -74,7 +74,7 @@ template <class Rng> struct LongRangeStepper2D {
   auto operator()(const Point &p) -> Point {
     const auto d = direction();
     const auto r = pareto();
-    const auto step = Point{std::lround(d[0] * r), std::lround(d[1] * r)};
+    const auto step = Point{std::round(d[0] * r), std::round(d[1] * r)};
 
     return p + step;
   }
@@ -107,8 +107,9 @@ template <class Rng> struct LongRangeStepper3D {
   auto operator()(const Point &p) -> Point {
     const auto d = direction();
     const auto r = pareto();
-    const auto step = Point{std::lround(d[0] * r), std::lround(d[1] * r),
-                            std::lround(d[2] * r)};
+    const auto step = Point{static_cast<Point::Field_t>(std::round(d[0] * r)),
+                            static_cast<Point::Field_t>(std::round(d[1] * r)),
+                            static_cast<Point::Field_t>(std::round(d[2] * r))};
 
     return p + step;
   }

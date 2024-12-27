@@ -8,11 +8,14 @@
 
 namespace lerw {
 
-using int_t = int64_t;
+using int_t = int32_t;
+
 // TODO: constexpr?
 // https://stackoverflow.com/questions/55382543/is-it-possible-to-write-a-constexpr-rounding-function-for-avr
 // TODO: compile-time decide which round based on int_t
-template <class T> inline auto round(T t) -> int_t { return std::lround(t); }
+template <class T> inline auto round(T t) -> int_t {
+  return static_cast<int_t>(std::lround(t));
+}
 
 struct Point1D {
   using Field_t = int_t;
@@ -43,9 +46,6 @@ struct Point1D {
     rhs *= lhs;
     return rhs;
   }
-
-  constexpr auto l2sq() const -> double { return static_cast<double>(x * x); }
-  constexpr auto l1() const -> double { return static_cast<double>(abs{}(x)); }
 
   constexpr auto operator==(const Point1D &) const -> bool = default;
 
@@ -87,15 +87,6 @@ struct Point2D {
   constexpr friend auto operator*(double lhs, Point2D rhs) -> Point2D {
     rhs *= lhs;
     return rhs;
-  }
-
-  constexpr auto l2sq() const -> double {
-    return static_cast<double>(x * x + y * y);
-  }
-
-  constexpr auto l1() const -> double {
-    constexpr auto a = abs{};
-    return static_cast<double>(a(x) + a(y));
   }
 
   constexpr auto operator==(const Point2D &) const -> bool = default;
@@ -158,15 +149,6 @@ struct Point3D {
     return rhs;
   }
 
-  constexpr auto l2sq() const -> double {
-    return static_cast<double>(x * x + y * y + z * z);
-  }
-
-  constexpr auto l1() const -> double {
-    constexpr auto a = abs{};
-    return static_cast<double>(a(x) + a(y) + a(z));
-  }
-
   constexpr auto operator==(const Point3D &) const -> bool = default;
 
   consteval static auto Zero() -> Point3D { return {0, 0, 0}; }
@@ -176,6 +158,18 @@ struct Point3D {
             {0, -1, 0},       {0, 0, 1},  {0, 0, -1}};
   }
 };
+
+template <Norm N> constexpr auto norm(Point1D p) -> double {
+  return norm<N>(p.x);
+}
+
+template <Norm N> constexpr auto norm(Point2D p) -> double {
+  return norm<N>(p.x, p.y);
+}
+
+template <Norm N> constexpr auto norm(Point3D p) -> double {
+  return norm<N>(p.x, p.y, p.z);
+}
 
 } // namespace lerw
 
