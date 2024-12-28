@@ -12,7 +12,7 @@ build:
 install: build
 	cmake --install $(BUILD_DIR) --prefix $(INSTALL_DIR)
 
-test: build
+test: build install
 	cd $(BUILD_DIR) && ctest --output-on-failure
 	python interface.py
 

@@ -58,7 +58,11 @@ target_link_libraries(lerw PRIVATE
 
 # testing
 find_package(Catch2 3 REQUIRED)
-add_executable(tests tests/test.cpp)
+add_executable(tests
+	tests/stopper.cpp
+	tests/utils.cpp
+	tests/generator.cpp
+)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 
 include(CTest)

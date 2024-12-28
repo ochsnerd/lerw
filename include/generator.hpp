@@ -11,7 +11,7 @@ template <stopper Stopper, stepper Stepper> struct RandomWalkGenerator {
   Stepper stepper;
 
   constexpr auto operator()() -> auto {
-    std::vector walk{Stepper::Point::Zero()};
+    std::vector walk{zero<typename Stepper::Point>()};
 
     while (not stopper(walk))
       walk.emplace_back(stepper(walk.back()));
@@ -27,9 +27,9 @@ struct LoopErasedRandomWalkGenerator {
 
   constexpr auto operator()() -> auto {
     using Point = Stepper::Point;
-    const auto zero = Point::Zero();
-    gtl::flat_hash_set<Point> visited{zero};
-    std::vector walk{zero};
+    const auto start = zero<Point>();
+    gtl::flat_hash_set<Point> visited{start};
+    std::vector walk{start};
 
     while (not stopper(walk)) {
       auto proposed = stepper(walk.back());

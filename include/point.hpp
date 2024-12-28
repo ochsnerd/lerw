@@ -5,6 +5,7 @@
 #include <unordered_set> // IWYU pragma: keep // std::hash
 
 #include "utils.hpp"
+#include "concepts.hpp" // IWYU pragma: keep // zero<T>()
 
 namespace lerw {
 
@@ -49,8 +50,6 @@ struct Point1D {
 
   constexpr auto operator==(const Point1D &) const -> bool = default;
 
-  consteval static auto Zero() -> Point1D { return {0}; }
-
   consteval static auto Directions() -> std::array<Point1D, 2> {
     return {Point1D{1}, {-1}};
   }
@@ -90,8 +89,6 @@ struct Point2D {
   }
 
   constexpr auto operator==(const Point2D &) const -> bool = default;
-
-  consteval static auto Zero() -> Point2D { return {0, 0}; }
 
   consteval static auto Directions() -> std::array<Point2D, 8> {
     return {Point2D{
@@ -151,8 +148,6 @@ struct Point3D {
 
   constexpr auto operator==(const Point3D &) const -> bool = default;
 
-  consteval static auto Zero() -> Point3D { return {0, 0, 0}; }
-
   consteval static auto Directions() -> std::array<Point3D, 8> {
     return {Point3D{1, 0, 0}, {-1, 0, 0}, {0, 1, 0},
             {0, -1, 0},       {0, 0, 1},  {0, 0, -1}};
@@ -169,6 +164,12 @@ template <Norm N> constexpr auto norm(Point2D p) -> double {
 
 template <Norm N> constexpr auto norm(Point3D p) -> double {
   return norm<N>(p.x, p.y, p.z);
+}
+
+template <> inline constexpr auto zero<Point1D>() -> Point1D { return {0}; }
+template <> inline constexpr auto zero<Point2D>() -> Point2D { return {0, 0}; }
+template <> inline constexpr auto zero<Point3D>() -> Point3D {
+  return {0, 0, 0};
 }
 
 } // namespace lerw
