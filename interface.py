@@ -91,7 +91,7 @@ def test():
         "dimension": 2,
         "distance": 5000,
         "number_of_walks": 10,
-        "alpha": 0.9,
+        "alpha": 0.5,
         "norm": Norm.L2,
         "seed": 2,
     }
@@ -101,7 +101,7 @@ def test():
     walks = get_walk_lengths(**args)
     assert file.exists()
     assert len(walks) == 10
-    assert walks[0] == 4236
+    assert walks[0] == 51
     print("all good")
 
 

@@ -4,8 +4,8 @@
 #include <cmath>
 #include <unordered_set> // IWYU pragma: keep // std::hash
 
-#include "utils.hpp"
 #include "concepts.hpp" // IWYU pragma: keep // zero<T>()
+#include "utils.hpp"
 
 namespace lerw {
 
@@ -171,6 +171,40 @@ template <> inline constexpr auto zero<Point2D>() -> Point2D { return {0, 0}; }
 template <> inline constexpr auto zero<Point3D>() -> Point3D {
   return {0, 0, 0};
 }
+
+template <> inline constexpr auto dim<Point1D>() -> unsigned { return 1; }
+template <> inline constexpr auto dim<Point2D>() -> unsigned { return 2; }
+template <> inline constexpr auto dim<Point3D>() -> unsigned { return 3; }
+
+template <> struct constructor<Point1D> {
+  template <class InputIt>
+  auto operator()(InputIt first, InputIt last) const -> Point1D {
+    const auto x = *first++;
+    assert(first == last);
+    return {x};
+  };
+};
+
+template <> struct constructor<Point2D> {
+  template <class InputIt>
+  auto operator()(InputIt first, InputIt last) const -> Point2D {
+    const auto x = *first++;
+    const auto y = *first++;
+    assert(first == last);
+    return {x, y};
+  };
+};
+
+template <> struct constructor<Point3D> {
+  template <class InputIt>
+  auto operator()(InputIt first, InputIt last) const -> Point3D {
+    const auto x = *first++;
+    const auto y = *first++;
+    const auto z = *first++;
+    assert(first == last);
+    return {x, y, z};
+  };
+};
 
 } // namespace lerw
 

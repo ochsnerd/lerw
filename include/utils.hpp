@@ -76,4 +76,5 @@ template <> struct norm_selector<Norm::LINFTY> {
 template <Norm N, class... T> constexpr auto norm(T... args) -> auto {
   return norm_selector<N>{}(args...);
 }
+
 } // namespace lerw

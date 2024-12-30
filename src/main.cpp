@@ -7,34 +7,14 @@
 #include <map>
 #include <print>
 #include <random>
-#include <ranges>
 
+#include "ldstepper.hpp"
 #include "lerw.hpp"
-#include "stepper.hpp"
+#include "point.hpp"
 #include "utils.hpp"
 
 using namespace lerw;
 namespace po = boost::program_options;
-
-// Print a histogram of the pareto distribution as a sanity check
-// https://en.wikipedia.org/wiki/Pareto_distribution
-// https://www.boost.org/doc/libs/1_86_0/libs/math/doc/html/math_toolkit/dist_ref/dists/pareto.html
-void show_pareto() {
-  const auto n = 10000;
-  auto stepper = LongRangeStepper1D{std::mt19937{}, 0.5};
-
-  std::map<long, std::size_t> occurences{};
-  for (auto t :
-       std::views::iota(1, n) | std::views::transform([&stepper](auto) {
-         return stepper.pareto();
-       })) {
-    occurences[t]++;
-  }
-
-  for (const auto &[value, number] : occurences) {
-    std::cout << value << std::string(number, '*') << '\n';
-  }
-}
 
 auto main(int argc, char *argv[]) -> int {
   Norm norm = Norm::L2;
@@ -94,15 +74,18 @@ auto main(int argc, char *argv[]) -> int {
     out = &output_file;
   }
 
-  auto seed_rng = std::mt19937{seed};
-  auto stepper_factory = [&seed_rng, alpha] {
-    return LongRangeStepper3D{std::mt19937{seed_rng()}, alpha};
+  auto stepper_factory = [alpha] {
+    return LDStepper{ParetoDistribution{alpha}, L2Direction<Point2D>{}};
   };
+
+  auto seed_rng = std::mt19937{seed};
+  auto rng_factory = [&seed_rng] { return std::mt19937{seed_rng()}; };
 
   std::println(*out, "# D={}, R={}, N={}, α={}, Norm={}, seed={}", dimension,
                distance, N, alpha, norm_to_string(norm), seed);
 
-  for (auto l : compute_lerw_lengths(stepper_factory, distance, N)) {
+  for (auto l :
+       compute_lerw_lengths(stepper_factory, rng_factory, distance, N)) {
     std::println(*out, "{}", l);
   }
 }
