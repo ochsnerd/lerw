@@ -1,3 +1,5 @@
+#include <functional>
+#include <stdexcept>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wnull-dereference"
 #include <boost/program_options.hpp>
@@ -15,6 +17,11 @@
 
 using namespace lerw;
 namespace po = boost::program_options;
+
+// helper for switch
+constexpr auto switch_pair(std::size_t dimension, Norm norm) -> std::size_t {
+  return (dimension << 2) + static_cast<size_t>(norm);
+}
 
 auto main(int argc, char *argv[]) -> int {
   Norm norm = Norm::L2;
@@ -74,18 +81,52 @@ auto main(int argc, char *argv[]) -> int {
     out = &output_file;
   }
 
-  auto stepper_factory = [alpha] {
-    return LDStepper{ParetoDistribution{alpha}, L2Direction<Point2D>{}};
-  };
-
   auto seed_rng = std::mt19937{seed};
   auto rng_factory = [&seed_rng] { return std::mt19937{seed_rng()}; };
-
   std::println(*out, "# D={}, R={}, N={}, α={}, Norm={}, seed={}", dimension,
                distance, N, alpha, norm_to_string(norm), seed);
 
-  for (auto l :
-       compute_lerw_lengths(stepper_factory, rng_factory, distance, N)) {
+  auto compute_with = [&rng_factory, N](auto stepper, auto stopper) {
+    return compute_lerw_lengths(std::move(stepper), std::move(stopper),
+                                rng_factory, N);
+  };
+
+  const auto lengths = [&] {
+    switch (switch_pair(dimension, norm)) {
+    case switch_pair(1, Norm::L2): {
+
+      auto stepper_factory = [alpha] -> decltype(auto) {
+        return LDStepper{ParetoDistribution{alpha}, L2Direction<Point1D>{}};
+      };
+      auto stopper_factory = [distance] {
+        return DistanceStopper<Norm::L2>{distance};
+      };
+      return compute_with(stepper_factory, stopper_factory);
+    }
+    case switch_pair(2, Norm::L2): {
+      auto stepper_factory = [alpha] -> decltype(auto) {
+        return LDStepper{ParetoDistribution{alpha}, L2Direction<Point2D>{}};
+      };
+      auto stopper_factory = [distance] {
+        return DistanceStopper<Norm::L2>{distance};
+      };
+      return compute_with(stepper_factory, stopper_factory);
+    }
+    case switch_pair(3, Norm::L2): {
+      auto stepper_factory = [alpha] -> decltype(auto) {
+        return LDStepper{ParetoDistribution{alpha}, L2Direction<Point3D>{}};
+      };
+      auto stopper_factory = [distance] {
+        return DistanceStopper<Norm::L2>{distance};
+      };
+      return compute_with(stepper_factory, stopper_factory);
+    }
+    default:
+      throw std::invalid_argument("Unsupported dimension/norm choice");
+    }
+  }();
+
+  for (auto l : lengths) {
     std::println(*out, "{}", l);
   }
 }

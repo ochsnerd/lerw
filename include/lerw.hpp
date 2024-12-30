@@ -34,20 +34,16 @@ auto compute_lengths(GeneratorFactory &&generator_factory,
   std::transform(
       std::execution::par_unseq, generators.begin(), generators.end(),
       rngs.begin(), lengths.begin(),
-      [](auto &generator, auto &rng) { return generator(rng).size(); });
+      [](auto generator, auto rng) { return generator(rng).size(); });
 
   return lengths;
 }
 
-template <class StepperFactory, class RNGFactory>
+template <class StepperFactory, class StopperFactory, class RNGFactory>
 auto compute_lerw_lengths(StepperFactory &&stepper_factory,
-                          RNGFactory &&rng_factory, double distance,
+                          StopperFactory &&stopper_factory,
+                          RNGFactory &&rng_factory,
                           std::size_t n_samples) -> auto {
-  // TODO: Seems strange to build the stopper here and the stepper not (will
-  // have to refactor anyway when norm)
-  auto stopper_factory = [distance] {
-    return DistanceStopper<Norm::L2>{distance};
-  };
   auto generator_factory = [&stopper_factory, &stepper_factory] {
     return LoopErasedRandomWalkGenerator{stopper_factory(), stepper_factory()};
   };
@@ -61,7 +57,9 @@ auto compute_average_length(GeneratorFactory &&generator_factory,
                             size_t N) -> double {
   assert(N != 0);
   return std::ranges::fold_left_first(
-             compute_lengths(generator_factory, rng_factory, N), std::plus{}) /
+             compute_lengths(std::move(generator_factory),
+                             std::move(rng_factory), N),
+             std::plus{}) /
          static_cast<double>(N);
 }
 
@@ -73,11 +71,12 @@ auto compute_lerw_average_lengths(StepperFactory &&stepper_factory,
   auto results = std::vector<std::pair<double, double>>{};
   for (const auto &d : distances) {
     auto stopper_factory = [d] { return DistanceStopper<Norm::L2>{d}; };
-    auto generator_factory = [&stopper_factory, &stepper_factory] {
-      return LoopErasedRandomWalkGenerator{stopper_factory(),
-                                           stepper_factory()};
-    };
-    auto l = compute_average_length(generator_factory, rng_factory, n_samples);
+    auto l = compute_average_length(
+        [&stopper_factory, &stepper_factory] {
+          return LoopErasedRandomWalkGenerator{stopper_factory(),
+                                               stepper_factory()};
+        },
+        rng_factory, n_samples);
     results.emplace_back(d, l);
   }
   return results;
