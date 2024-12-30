@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cmath>
+#include <iterator>
 #include <unordered_set> // IWYU pragma: keep // std::hash
 
 #include "concepts.hpp" // IWYU pragma: keep // zero<T>()
@@ -179,8 +180,11 @@ template <> inline constexpr auto dim<Point3D>() -> unsigned { return 3; }
 template <> struct constructor<Point1D> {
   template <class InputIt>
   auto operator()(InputIt first, InputIt last) const -> Point1D {
+    if (std::distance(first, last) != 1) {
+      throw std::invalid_argument(
+          "Point1D constructor requires exactly 1 elements");
+    }
     const auto x = *first++;
-    assert(first == last);
     return {x};
   };
 };
@@ -188,9 +192,12 @@ template <> struct constructor<Point1D> {
 template <> struct constructor<Point2D> {
   template <class InputIt>
   auto operator()(InputIt first, InputIt last) const -> Point2D {
+    if (std::distance(first, last) != 2) {
+      throw std::invalid_argument(
+          "Point2D constructor requires exactly 2 elements");
+    }
     const auto x = *first++;
     const auto y = *first++;
-    assert(first == last);
     return {x, y};
   };
 };
@@ -198,10 +205,13 @@ template <> struct constructor<Point2D> {
 template <> struct constructor<Point3D> {
   template <class InputIt>
   auto operator()(InputIt first, InputIt last) const -> Point3D {
+    if (std::distance(first, last) != 3) {
+      throw std::invalid_argument(
+          "Point3D constructor requires exactly 3 elements");
+    }
     const auto x = *first++;
     const auto y = *first++;
     const auto z = *first++;
-    assert(first == last);
     return {x, y, z};
   };
 };
