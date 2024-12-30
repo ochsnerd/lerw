@@ -16,17 +16,6 @@ class Norm(Enum):
     L2 = 2
 
 
-def _format_filename(
-    dimension: int,
-    distance: float,
-    number_of_walks: int,
-    alpha: float,
-    norm: Norm,
-    seed: int = 42,
-) -> str:
-    return f"walks_dim{dimension}_dist{distance}_n{number_of_walks}_a{alpha}_{norm.name}_rng{seed}.txt"
-
-
 def get_walk_lengths(
     dimension: int,
     distance: float,
@@ -84,6 +73,17 @@ def get_walk_lengths(
             )
 
     return np.genfromtxt(file_path, dtype=np.int64, comments="#", delimiter="\n")
+
+
+def _format_filename(
+    dimension: int,
+    distance: float,
+    number_of_walks: int,
+    alpha: float,
+    norm: Norm,
+    seed: int = 42,
+) -> str:
+    return f"walks_dim{dimension}_dist{distance}_n{number_of_walks}_a{alpha}_{norm.name}_rng{seed}.txt"
 
 
 def test():
