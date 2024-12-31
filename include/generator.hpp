@@ -12,7 +12,7 @@ template <stopper Stopper, stepper Stepper> struct RandomWalkGenerator {
   Stepper stepper;
 
   template <std::uniform_random_bit_generator RNG>
-  constexpr auto operator()(RNG& rng) -> auto {
+  constexpr auto operator()(RNG &rng) -> auto {
     std::vector walk{zero<typename Stepper::Point>()};
 
     while (not stopper(walk))
@@ -28,7 +28,7 @@ struct LoopErasedRandomWalkGenerator {
   Stepper stepper;
 
   template <std::uniform_random_bit_generator RNG>
-  constexpr auto operator()(RNG& rng) -> auto {
+  constexpr auto operator()(RNG &rng) -> auto {
     using Point = Stepper::Point;
     const auto start = zero<Point>();
     gtl::flat_hash_set<Point> visited{start};

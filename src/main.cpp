@@ -1,4 +1,3 @@
-#include <functional>
 #include <stdexcept>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wnull-dereference"
@@ -13,6 +12,7 @@
 #include "ldstepper.hpp"
 #include "lerw.hpp"
 #include "point.hpp"
+#include "array_point.hpp"
 #include "utils.hpp"
 
 using namespace lerw;
@@ -94,7 +94,6 @@ auto main(int argc, char *argv[]) -> int {
   const auto lengths = [&] {
     switch (switch_pair(dimension, norm)) {
     case switch_pair(1, Norm::L2): {
-
       auto stepper_factory = [alpha] -> decltype(auto) {
         return LDStepper{ParetoDistribution{alpha}, L2Direction<Point1D>{}};
       };
@@ -115,6 +114,24 @@ auto main(int argc, char *argv[]) -> int {
     case switch_pair(3, Norm::L2): {
       auto stepper_factory = [alpha] -> decltype(auto) {
         return LDStepper{ParetoDistribution{alpha}, L2Direction<Point3D>{}};
+      };
+      auto stopper_factory = [distance] {
+        return DistanceStopper<Norm::L2>{distance};
+      };
+      return compute_with(stepper_factory, stopper_factory);
+    }
+    case switch_pair(4, Norm::L2): {
+      auto stepper_factory = [alpha] -> decltype(auto) {
+        return LDStepper{ParetoDistribution{alpha}, L2Direction<ArrayPoint<4>>{}};
+      };
+      auto stopper_factory = [distance] {
+        return DistanceStopper<Norm::L2>{distance};
+      };
+      return compute_with(stepper_factory, stopper_factory);
+    }
+    case switch_pair(5, Norm::L2): {
+      auto stepper_factory = [alpha] -> decltype(auto) {
+        return LDStepper{ParetoDistribution{alpha}, L2Direction<ArrayPoint<5>>{}};
       };
       auto stopper_factory = [distance] {
         return DistanceStopper<Norm::L2>{distance};

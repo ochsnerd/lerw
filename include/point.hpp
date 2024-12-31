@@ -12,13 +12,7 @@ namespace lerw {
 
 using int_t = int32_t;
 
-// TODO: constexpr?
-// https://stackoverflow.com/questions/55382543/is-it-possible-to-write-a-constexpr-rounding-function-for-avr
-// TODO: compile-time decide which round based on int_t
-template <class T> inline auto round(T t) -> int_t {
-  return static_cast<int_t>(std::lround(t));
-}
-
+// Rudimentary testing shows that this is as fast as a plain int
 struct Point1D {
   using Field_t = int_t;
 
@@ -32,21 +26,6 @@ struct Point1D {
   constexpr friend auto operator+(Point1D lhs, const Point1D &rhs) -> Point1D {
     lhs += rhs;
     return lhs;
-  }
-
-  constexpr auto operator*=(double rhs) -> Point1D & {
-    x = round(static_cast<double>(x) * rhs);
-    return *this;
-  }
-
-  constexpr friend auto operator*(Point1D lhs, double rhs) -> Point1D {
-    lhs *= rhs;
-    return lhs;
-  }
-
-  constexpr friend auto operator*(double lhs, Point1D rhs) -> Point1D {
-    rhs *= lhs;
-    return rhs;
   }
 
   constexpr auto operator==(const Point1D &) const -> bool = default;
@@ -71,22 +50,6 @@ struct Point2D {
   constexpr friend auto operator+(Point2D lhs, const Point2D &rhs) -> Point2D {
     lhs += rhs;
     return lhs;
-  }
-
-  constexpr auto operator*=(double rhs) -> Point2D & {
-    x = round(static_cast<double>(x) * rhs);
-    y = round(static_cast<double>(y) * rhs);
-    return *this;
-  }
-
-  constexpr friend auto operator*(Point2D lhs, double rhs) -> Point2D {
-    lhs *= rhs;
-    return lhs;
-  }
-
-  constexpr friend auto operator*(double lhs, Point2D rhs) -> Point2D {
-    rhs *= lhs;
-    return rhs;
   }
 
   constexpr auto operator==(const Point2D &) const -> bool = default;
@@ -130,23 +93,6 @@ struct Point3D {
     return lhs;
   }
 
-  constexpr auto operator*=(double rhs) -> Point3D & {
-    x = round(static_cast<double>(x) * rhs);
-    y = round(static_cast<double>(y) * rhs);
-    z = round(static_cast<double>(z) * rhs);
-    return *this;
-  }
-
-  constexpr friend auto operator*(Point3D lhs, double rhs) -> Point3D {
-    lhs *= rhs;
-    return lhs;
-  }
-
-  constexpr friend auto operator*(double lhs, Point3D rhs) -> Point3D {
-    rhs *= lhs;
-    return rhs;
-  }
-
   constexpr auto operator==(const Point3D &) const -> bool = default;
 
   consteval static auto Directions() -> std::array<Point3D, 8> {
@@ -167,15 +113,15 @@ template <Norm N> constexpr auto norm(Point3D p) -> double {
   return norm<N>(p.x, p.y, p.z);
 }
 
-template <> inline constexpr auto zero<Point1D>() -> Point1D { return {0}; }
-template <> inline constexpr auto zero<Point2D>() -> Point2D { return {0, 0}; }
-template <> inline constexpr auto zero<Point3D>() -> Point3D {
+template <> constexpr auto zero<Point1D>() -> Point1D { return {0}; }
+template <> constexpr auto zero<Point2D>() -> Point2D { return {0, 0}; }
+template <> constexpr auto zero<Point3D>() -> Point3D {
   return {0, 0, 0};
 }
 
-template <> inline constexpr auto dim<Point1D>() -> unsigned { return 1; }
-template <> inline constexpr auto dim<Point2D>() -> unsigned { return 2; }
-template <> inline constexpr auto dim<Point3D>() -> unsigned { return 3; }
+template <> constexpr auto dim<Point1D>() -> std::size_t { return 1; }
+template <> constexpr auto dim<Point2D>() -> std::size_t { return 2; }
+template <> constexpr auto dim<Point3D>() -> std::size_t { return 3; }
 
 template <> struct constructor<Point1D> {
   template <class InputIt>

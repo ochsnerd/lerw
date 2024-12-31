@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 #include <random>
-#include <type_traits>
 #include <vector>
 
 #include "generator.hpp"

@@ -56,18 +56,21 @@ template <class... T> constexpr auto linfty_norm(T... args) -> double {
 template <Norm N> struct norm_selector;
 
 template <> struct norm_selector<Norm::L1> {
+  constexpr norm_selector() = default;
   template <class... T> constexpr auto operator()(T... args) -> auto {
     return l1_norm(args...);
   }
 };
 
 template <> struct norm_selector<Norm::L2> {
+  constexpr norm_selector() = default;
   template <class... T> constexpr auto operator()(T... args) -> auto {
     return l2_norm(args...);
   }
 };
 
 template <> struct norm_selector<Norm::LINFTY> {
+  constexpr norm_selector() = default;
   template <class... T> constexpr auto operator()(T... args) -> auto {
     return linfty_norm(args...);
   }

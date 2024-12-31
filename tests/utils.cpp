@@ -7,6 +7,9 @@ using namespace lerw;
 using Catch::Matchers::WithinRel;
 
 TEST_CASE("Norms") {
+  // I could do that. Do I want to do that?
+  // static_assert(norm<Norm::L1>(1) == 1);
+
   CHECK(norm<Norm::L1>(1) == 1);
   CHECK(norm<Norm::L1>(1, -3) == 4);
   CHECK(norm<Norm::L2>(1) == 1);

@@ -23,6 +23,7 @@ def get_walk_lengths(
     alpha: float,
     norm: Norm,
     seed: int = 3,
+    recompute: bool = False,
 ) -> npt.NDArray[np.int64]:
     """Get walk lengths from existing file or generate new data using C++ executable.
 
@@ -32,6 +33,9 @@ def get_walk_lengths(
 
     filename = _format_filename(dimension, distance, number_of_walks, alpha, norm, seed)
     file_path = DATA_DIR / filename
+
+    if recompute:
+        file_path.unlink(missing_ok=True)
 
     if not file_path.exists():
         cmd = [

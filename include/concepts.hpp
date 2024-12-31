@@ -21,16 +21,17 @@ concept distribution = requires(D d) {
   } -> std::same_as<typename D::result_type>;
 };
 
-template <class T> inline constexpr auto zero() -> T;
-template <class T> inline constexpr auto dim() -> unsigned;
-// TODO: Get rid of this
+template <class T> constexpr auto zero() -> T;
+template <class T> constexpr auto dim() -> std::size_t;
+// TODO: Get rid of this (only here because boost::uniform_on_sphere uses the
+// heap)
 template <class T> struct constructor {
   template <class InputIt>
   auto operator()(InputIt first, InputIt last) const -> T;
 };
 // int is a point
-template <> inline constexpr auto zero<int>() -> int { return 0; }
-template <> inline constexpr auto dim<int>() -> unsigned { return 1; }
+template <> constexpr auto zero<int>() -> int { return 0; }
+template <> constexpr auto dim<int>() -> std::size_t { return 1; }
 template <> struct constructor<int> {
   template <class InputIt>
   auto operator()(InputIt first, InputIt last) const -> int {
@@ -47,11 +48,11 @@ concept point = std::equality_comparable<P> && requires(P p1, P p2) {
   { norm<Norm::L2>(p1) } -> std::floating_point;
   { norm<Norm::LINFTY>(p1) } -> std::floating_point;
   { zero<P>() } -> std::same_as<P>;
+  { dim<P>() } -> std::unsigned_integral;
   {
     constructor<P>{}(std::declval<std::vector<int>::iterator>(),
                      std::declval<std::vector<int>::iterator>())
   } -> std::same_as<P>;
-  { dim<P>() };
   typename gtl::flat_hash_set<P>;
 };
 
