@@ -18,4 +18,4 @@ test: build install interface.py
 	python interface.py
 
 clean:
-	rm -rf $(BUILD_DIR) $(INSTALL_DIR)
+	rm -rf $(BUILD_DIR)
