@@ -1,9 +1,9 @@
 #pragma once
 
-#include <gtl/phmap.hpp>
 #include <random>
 
 #include "concepts.hpp" // IWYU pragma: keep
+#include "hash_set.hpp"
 
 namespace lerw {
 
@@ -31,7 +31,7 @@ struct LoopErasedRandomWalkGenerator {
   constexpr auto operator()(RNG &rng) -> auto {
     using Point = Stepper::Point;
     const auto start = zero<Point>();
-    gtl::flat_hash_set<Point> visited{start};
+    hash_set<Point> visited{start};
     std::vector walk{start};
 
     while (not stopper(walk)) {

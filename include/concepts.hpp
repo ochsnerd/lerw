@@ -1,11 +1,11 @@
 #pragma once
 
 #include <concepts>
-#include <gtl/phmap.hpp>
 #include <random>
 #include <utility>
 #include <vector>
 
+#include "hash_set.hpp"
 #include "utils.hpp"
 
 namespace lerw {
@@ -53,7 +53,7 @@ concept point = std::equality_comparable<P> && requires(P p1, P p2) {
     constructor<P>{}(std::declval<std::vector<int>::iterator>(),
                      std::declval<std::vector<int>::iterator>())
   } -> std::same_as<P>;
-  typename gtl::flat_hash_set<P>;
+  typename hash_set<P>;
 };
 
 template <class D>
