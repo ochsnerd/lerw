@@ -16,9 +16,6 @@ template <class GeneratorFactory, class RNGFactory>
 auto compute_lengths(GeneratorFactory &&generator_factory,
                      RNGFactory &&rng_factory,
                      size_t N) -> std::vector<size_t> {
-  // TODO: Can we use std::ranges::generate_n to generate a vector of pairs or
-  // sth?
-
   auto generators = std::vector<decltype(generator_factory())>{};
   auto rngs = std::vector<decltype(rng_factory())>{};
 
@@ -52,9 +49,7 @@ auto compute_lerw_lengths(StepperFactory &&stepper_factory,
 
 template <class GeneratorFactory, class RNGFactory>
 auto compute_average_length(GeneratorFactory &&generator_factory,
-                            RNGFactory &&rng_factory,
-
-                            size_t N) -> double {
+                            RNGFactory &&rng_factory, size_t N) -> double {
   assert(N != 0);
   return std::ranges::fold_left_first(
              compute_lengths(std::move(generator_factory),

@@ -4,6 +4,8 @@
 
 #include "generator.hpp"
 #include "ldstepper.hpp"
+#include "directions.hpp"
+#include "distributions.hpp"
 #include "point.hpp"
 #include "stepper.hpp"
 #include "stopper.hpp"
@@ -145,17 +147,17 @@ TEST_CASE("ConstructDifferentCombinations") {
 
   const auto d = LoopErasedRandomWalkGenerator{DistanceStopper<Norm::L1>{10.0},
                                                LDStepper{
-                                                   ParetoDistribution{2.0},
+                                                   Pareto{2.0},
                                                    L2Direction<Point1D>{},
                                                }};
   const auto e = LoopErasedRandomWalkGenerator{DistanceStopper<Norm::L1>{10.0},
                                                LDStepper{
-                                                   ParetoDistribution{2.0},
+                                                   Pareto{2.0},
                                                    L2Direction<Point2D>{},
                                                }};
   const auto f = LoopErasedRandomWalkGenerator{DistanceStopper<Norm::L1>{10.0},
                                                LDStepper{
-                                                   ParetoDistribution{2.0},
+                                                   Pareto{2.0},
                                                    L2Direction<Point3D>{},
                                                }};
 }

@@ -9,10 +9,12 @@
 #include <print>
 #include <random>
 
+#include "array_point.hpp"
+#include "directions.hpp"
+#include "distributions.hpp"
 #include "ldstepper.hpp"
 #include "lerw.hpp"
 #include "point.hpp"
-#include "array_point.hpp"
 #include "utils.hpp"
 
 using namespace lerw;
@@ -95,7 +97,7 @@ auto main(int argc, char *argv[]) -> int {
     switch (switch_pair(dimension, norm)) {
     case switch_pair(1, Norm::L2): {
       auto stepper_factory = [alpha] -> decltype(auto) {
-        return LDStepper{ParetoDistribution{alpha}, L2Direction<Point1D>{}};
+        return LDStepper{Pareto{alpha}, L2Direction<Point1D>{}};
       };
       auto stopper_factory = [distance] {
         return DistanceStopper<Norm::L2>{distance};
@@ -104,7 +106,7 @@ auto main(int argc, char *argv[]) -> int {
     }
     case switch_pair(2, Norm::L2): {
       auto stepper_factory = [alpha] -> decltype(auto) {
-        return LDStepper{ParetoDistribution{alpha}, L2Direction<Point2D>{}};
+        return LDStepper{Pareto{alpha}, L2Direction<Point2D>{}};
       };
       auto stopper_factory = [distance] {
         return DistanceStopper<Norm::L2>{distance};
@@ -113,7 +115,7 @@ auto main(int argc, char *argv[]) -> int {
     }
     case switch_pair(3, Norm::L2): {
       auto stepper_factory = [alpha] -> decltype(auto) {
-        return LDStepper{ParetoDistribution{alpha}, L2Direction<Point3D>{}};
+        return LDStepper{Pareto{alpha}, L2Direction<Point3D>{}};
       };
       auto stopper_factory = [distance] {
         return DistanceStopper<Norm::L2>{distance};
@@ -122,7 +124,8 @@ auto main(int argc, char *argv[]) -> int {
     }
     case switch_pair(4, Norm::L2): {
       auto stepper_factory = [alpha] -> decltype(auto) {
-        return LDStepper{ParetoDistribution{alpha}, L2Direction<ArrayPoint<4>>{}};
+        return LDStepper{Pareto{alpha},
+                         L2Direction<ArrayPoint<4>>{}};
       };
       auto stopper_factory = [distance] {
         return DistanceStopper<Norm::L2>{distance};
@@ -131,7 +134,8 @@ auto main(int argc, char *argv[]) -> int {
     }
     case switch_pair(5, Norm::L2): {
       auto stepper_factory = [alpha] -> decltype(auto) {
-        return LDStepper{ParetoDistribution{alpha}, L2Direction<ArrayPoint<5>>{}};
+        return LDStepper{Pareto{alpha},
+                         L2Direction<ArrayPoint<5>>{}};
       };
       auto stopper_factory = [distance] {
         return DistanceStopper<Norm::L2>{distance};
