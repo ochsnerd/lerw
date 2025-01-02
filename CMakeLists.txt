@@ -64,6 +64,7 @@ add_executable(tests
 	tests/generator.cpp
 	tests/ldstepper.cpp
 	tests/points.cpp
+	tests/distributions.cpp
 )
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 
