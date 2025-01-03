@@ -6,11 +6,77 @@
 #include <iterator>
 #include <vector>
 
+#include "array_point.hpp"
+#include "directions.hpp"
+#include "distributions.hpp"
 #include "generator.hpp"
+#include "ldstepper.hpp"
+#include "point.hpp"
 #include "stopper.hpp"
 #include "utils.hpp"
 
 namespace lerw {
+
+template <std::size_t Dim>
+  requires(Dim > 0)
+struct PointTypeSelector {
+  using type = ArrayPoint<Dim>;
+};
+
+template <> struct PointTypeSelector<1> {
+  using type = Point1D;
+};
+
+template <> struct PointTypeSelector<2> {
+  using type = Point2D;
+};
+
+template <> struct PointTypeSelector<3> {
+  using type = Point3D;
+};
+
+template <std::size_t dim>
+using PointType = typename PointTypeSelector<dim>::type;
+
+template <std::size_t dim, Norm n> struct DirectionSelector;
+
+template <std::size_t dim> struct DirectionSelector<dim, Norm::L2> {
+  using type = L2Direction<PointType<dim>>;
+};
+
+template <std::size_t dim> struct DirectionSelector<dim, Norm::LINFTY> {
+  using type = LinftyDirection<PointType<dim>>;
+};
+
+template <std::size_t dim, Norm norm>
+using DirectionType = typename DirectionSelector<dim, norm>::type;
+
+template <Norm n> struct LengthSelector;
+
+template <> struct LengthSelector<Norm::L2> {
+  using type = Pareto;
+};
+
+template <> struct LengthSelector<Norm::LINFTY> {
+  using type = Zipf<>;
+};
+
+template <Norm n> using LengthType = typename LengthSelector<n>::type;
+
+struct LERWComputer {
+  std::function<std::mt19937()> rng_factory;
+  std::size_t N;
+  double alpha;
+  double distance;
+  template <std::size_t dim, Norm norm> auto compute() const {
+    return compute_lerw_lengths(
+        [alpha = alpha]() {
+          return LDStepper{LengthType<norm>{alpha}, DirectionType<dim, norm>{}};
+        },
+        [distance = distance]() { return DistanceStopper<norm>{distance}; },
+        rng_factory, N);
+  }
+};
 
 template <class GeneratorFactory, class RNGFactory>
 auto compute_lengths(GeneratorFactory &&generator_factory,

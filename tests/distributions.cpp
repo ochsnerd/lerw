@@ -1,23 +1,22 @@
-#include <algorithm>
 #include <cmath>
-#include <iterator>
 #include <numeric>
 #include <random>
+#include <vector>
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
-#include <vector>
 
 #include "distributions.hpp"
 
 using Catch::Matchers::WithinRel;
 
 TEST_CASE("Zipf") {
-  const auto a = GENERATE(2.5, 3, 3.5);
+  const auto a = GENERATE(1.5, 2, 2.5);
 
-  // The mean of the Zipf (Zeta) distribution is Z(a - 1) / Z(a) (if a > 2)
-  const auto mean_expected = std::riemann_zeta(a - 1) / std::riemann_zeta(a);
+  // The mean of the Zipf (Zeta) distribution is Z(a) / Z(a + 1) (if a > 1)
+  // (our alpha is s + 1 from wiki)
+  const auto mean_expected = std::riemann_zeta(a) / std::riemann_zeta(a + 1);
 
   auto rng = std::mt19937{};
   auto zipf = lerw::Zipf{a};

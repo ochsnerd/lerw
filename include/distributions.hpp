@@ -35,14 +35,13 @@ struct Pareto {
   using result_type = R;
 
   std::uniform_real_distribution<> uniform{};
-  // TODO: Define alpha as alpha - 1, to be consistent with Pareto (and our
-  // usage in general)
+    // Note that this is (s + 1) from wiki
   double alpha;
-  double b = std::pow(2, alpha - 1);
+  double b = std::pow(2, alpha);
 
   explicit Zipf(double alpha_) : alpha{alpha_} {
-    if (alpha <= 1.0) {
-      throw std::invalid_argument{"Alpha needs to be strictly larger than 1."};
+    if (alpha <= 0.0) {
+      throw std::invalid_argument{"Alpha needs to be larger than 0."};
     }
   };
 
@@ -51,8 +50,8 @@ struct Pareto {
     while (true) {
       const long double u = uniform(rng);
       const result_type X =
-          static_cast<result_type>(std::pow(u, -1.0 / (alpha - 1)));
-      const long double T = std::pow(1 + 1.0 / X, alpha - 1);
+          static_cast<result_type>(std::pow(u, -1.0 / alpha));
+      const long double T = std::pow(1 + 1.0 / X, alpha);
       const long double v = uniform(rng);
       if (v * X * (T - 1) / (b - 1) <= T / b) {
         return X;

@@ -9,12 +9,7 @@
 #include <print>
 #include <random>
 
-#include "array_point.hpp"
-#include "directions.hpp"
-#include "distributions.hpp"
-#include "ldstepper.hpp"
 #include "lerw.hpp"
-#include "point.hpp"
 #include "utils.hpp"
 
 using namespace lerw;
@@ -84,64 +79,34 @@ auto main(int argc, char *argv[]) -> int {
   }
 
   auto seed_rng = std::mt19937{seed};
-  auto rng_factory = [&seed_rng] { return std::mt19937{seed_rng()}; };
+  auto computer = LERWComputer{[&seed_rng] { return std::mt19937{seed_rng()}; },
+                               N, alpha, distance};
+
   std::println(*out, "# D={}, R={}, N={}, α={}, Norm={}, seed={}", dimension,
                distance, N, alpha, norm_to_string(norm), seed);
 
-  auto compute_with = [&rng_factory, N](auto stepper, auto stopper) {
-    return compute_lerw_lengths(std::move(stepper), std::move(stopper),
-                                rng_factory, N);
-  };
-
   const auto lengths = [&] {
     switch (switch_pair(dimension, norm)) {
-    case switch_pair(1, Norm::L2): {
-      auto stepper_factory = [alpha] -> decltype(auto) {
-        return LDStepper{Pareto{alpha}, L2Direction<Point1D>{}};
-      };
-      auto stopper_factory = [distance] {
-        return DistanceStopper<Norm::L2>{distance};
-      };
-      return compute_with(stepper_factory, stopper_factory);
-    }
-    case switch_pair(2, Norm::L2): {
-      auto stepper_factory = [alpha] -> decltype(auto) {
-        return LDStepper{Pareto{alpha}, L2Direction<Point2D>{}};
-      };
-      auto stopper_factory = [distance] {
-        return DistanceStopper<Norm::L2>{distance};
-      };
-      return compute_with(stepper_factory, stopper_factory);
-    }
-    case switch_pair(3, Norm::L2): {
-      auto stepper_factory = [alpha] -> decltype(auto) {
-        return LDStepper{Pareto{alpha}, L2Direction<Point3D>{}};
-      };
-      auto stopper_factory = [distance] {
-        return DistanceStopper<Norm::L2>{distance};
-      };
-      return compute_with(stepper_factory, stopper_factory);
-    }
-    case switch_pair(4, Norm::L2): {
-      auto stepper_factory = [alpha] -> decltype(auto) {
-        return LDStepper{Pareto{alpha},
-                         L2Direction<ArrayPoint<4>>{}};
-      };
-      auto stopper_factory = [distance] {
-        return DistanceStopper<Norm::L2>{distance};
-      };
-      return compute_with(stepper_factory, stopper_factory);
-    }
-    case switch_pair(5, Norm::L2): {
-      auto stepper_factory = [alpha] -> decltype(auto) {
-        return LDStepper{Pareto{alpha},
-                         L2Direction<ArrayPoint<5>>{}};
-      };
-      auto stopper_factory = [distance] {
-        return DistanceStopper<Norm::L2>{distance};
-      };
-      return compute_with(stepper_factory, stopper_factory);
-    }
+    case switch_pair(1, Norm::L2):
+      return computer.compute<1, Norm::L2>();
+    case switch_pair(2, Norm::L2):
+      return computer.compute<2, Norm::L2>();
+    case switch_pair(3, Norm::L2):
+      return computer.compute<3, Norm::L2>();
+    case switch_pair(4, Norm::L2):
+      return computer.compute<4, Norm::L2>();
+    case switch_pair(5, Norm::L2):
+      return computer.compute<5, Norm::L2>();
+    case switch_pair(1, Norm::LINFTY):
+      return computer.compute<1, Norm::LINFTY>();
+    case switch_pair(2, Norm::LINFTY):
+      return computer.compute<2, Norm::LINFTY>();
+    case switch_pair(3, Norm::LINFTY):
+      return computer.compute<3, Norm::LINFTY>();
+    case switch_pair(4, Norm::LINFTY):
+      return computer.compute<4, Norm::LINFTY>();
+    case switch_pair(5, Norm::LINFTY):
+      return computer.compute<5, Norm::LINFTY>();
     default:
       throw std::invalid_argument("Unsupported dimension/norm choice");
     }
