@@ -6,7 +6,7 @@ BUILD_DIR := build
 INSTALL_DIR := .
 
 build:
-	cmake -S . -B $(BUILD_DIR)
+	cmake -S . -B $(BUILD_DIR) -G Ninja
 	cmake --build $(BUILD_DIR)
 
 install: build interface.py
