@@ -25,9 +25,9 @@ template <point P> void check1D() {
   CHECK(norm<Norm::L2>(P{-1}) == 1);
   CHECK(norm<Norm::L2>(P{-5}) == 5);
 
-  CHECK(norm<Norm::LINFTY>(P{1}) == 1);
-  CHECK(norm<Norm::LINFTY>(P{-1}) == 1);
-  CHECK(norm<Norm::LINFTY>(P{-5}) == 5);
+  CHECK(norm<Norm::LINF>(P{1}) == 1);
+  CHECK(norm<Norm::LINF>(P{-1}) == 1);
+  CHECK(norm<Norm::LINF>(P{-5}) == 5);
 
   const auto v = std::vector<int>{1};
   CHECK(constructor<P>{}(v.cbegin(), v.cend()) == P{1});
@@ -57,9 +57,9 @@ template <point P> void check2D() {
   CHECK(norm<Norm::L2>(P{-1, 0}) == 1);
   CHECK(norm<Norm::L2>(P{3, 4}) == 5);
 
-  CHECK(norm<Norm::LINFTY>(P{1, 1}) == 1);
-  CHECK(norm<Norm::LINFTY>(P{-1, -2}) == 2);
-  CHECK(norm<Norm::LINFTY>(P{-5, 3}) == 5);
+  CHECK(norm<Norm::LINF>(P{1, 1}) == 1);
+  CHECK(norm<Norm::LINF>(P{-1, -2}) == 2);
+  CHECK(norm<Norm::LINF>(P{-5, 3}) == 5);
 
   // Vector construction
   const auto v = std::vector<int>{1, 2};
@@ -92,9 +92,9 @@ template <point P> void check3D() {
   CHECK(norm<Norm::L2>(P{3, 4, 0}) == 5);
   CHECK(norm<Norm::L2>(P{2, 3, 6}) == 7);
 
-  CHECK(norm<Norm::LINFTY>(P{1, 1, 1}) == 1);
-  CHECK(norm<Norm::LINFTY>(P{-1, -2, -3}) == 3);
-  CHECK(norm<Norm::LINFTY>(P{-5, 3, 4}) == 5);
+  CHECK(norm<Norm::LINF>(P{1, 1, 1}) == 1);
+  CHECK(norm<Norm::LINF>(P{-1, -2, -3}) == 3);
+  CHECK(norm<Norm::LINF>(P{-5, 3, 4}) == 5);
 
   const auto v = std::vector<int>{1, 2, 3};
   CHECK(constructor<P>{}(v.cbegin(), v.cend()) == P{1, 2, 3});
@@ -126,9 +126,9 @@ template <point P> void check4D() {
   CHECK(norm<Norm::L2>(P{2, 3, 6, 0}) == 7);
   CHECK(norm<Norm::L2>(P{1, 2, 2, 4}) == 5);
 
-  CHECK(norm<Norm::LINFTY>(P{1, 1, 1, 1}) == 1);
-  CHECK(norm<Norm::LINFTY>(P{-1, -2, -3, -4}) == 4);
-  CHECK(norm<Norm::LINFTY>(P{-5, 3, 4, 2}) == 5);
+  CHECK(norm<Norm::LINF>(P{1, 1, 1, 1}) == 1);
+  CHECK(norm<Norm::LINF>(P{-1, -2, -3, -4}) == 4);
+  CHECK(norm<Norm::LINF>(P{-5, 3, 4, 2}) == 5);
 
   const auto v = std::vector<int>{1, 2, 3, 4};
   CHECK(constructor<P>{}(v.cbegin(), v.cend()) == P{1, 2, 3, 4});

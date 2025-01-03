@@ -11,7 +11,7 @@ CPP_EXECUTABLE: Path = Path("bin") / "lerw"
 
 
 class Norm(Enum):
-    LINFTY = 0
+    LINF = 0
     L1 = 1
     L2 = 2
 

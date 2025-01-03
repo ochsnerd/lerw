@@ -81,7 +81,7 @@ TEST_CASE("DistanceStopper tests for different norms") {
   }
 
   SECTION("L-infinity norm tests") {
-    DistanceStopper<Norm::LINFTY> stopper{2.0};
+    DistanceStopper<Norm::LINF> stopper{2.0};
 
     SECTION("Point at origin") {
       std::vector<Point2D> walk{{0, 0}};

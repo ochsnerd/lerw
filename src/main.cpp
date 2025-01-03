@@ -34,7 +34,7 @@ auto main(int argc, char *argv[]) -> int {
       "norm,n",
       po::value<std::string>()->default_value("L2")->notifier(
           [&norm](const std::string &n) { norm = parse_norm(n); }),
-      "norm (L1, L2, or LINFTY)")(
+      "norm (L1, L2, or LINF)")(
       "dimension,D", po::value<size_t>(&dimension)->default_value(dimension),
       "dimension of the lattice")("number_of_walks,N",
                                   po::value<size_t>(&N)->default_value(N),
@@ -97,16 +97,16 @@ auto main(int argc, char *argv[]) -> int {
       return computer.compute<4, Norm::L2>();
     case switch_pair(5, Norm::L2):
       return computer.compute<5, Norm::L2>();
-    case switch_pair(1, Norm::LINFTY):
-      return computer.compute<1, Norm::LINFTY>();
-    case switch_pair(2, Norm::LINFTY):
-      return computer.compute<2, Norm::LINFTY>();
-    case switch_pair(3, Norm::LINFTY):
-      return computer.compute<3, Norm::LINFTY>();
-    case switch_pair(4, Norm::LINFTY):
-      return computer.compute<4, Norm::LINFTY>();
-    case switch_pair(5, Norm::LINFTY):
-      return computer.compute<5, Norm::LINFTY>();
+    case switch_pair(1, Norm::LINF):
+      return computer.compute<1, Norm::LINF>();
+    case switch_pair(2, Norm::LINF):
+      return computer.compute<2, Norm::LINF>();
+    case switch_pair(3, Norm::LINF):
+      return computer.compute<3, Norm::LINF>();
+    case switch_pair(4, Norm::LINF):
+      return computer.compute<4, Norm::LINF>();
+    case switch_pair(5, Norm::LINF):
+      return computer.compute<5, Norm::LINF>();
     default:
       throw std::invalid_argument("Unsupported dimension/norm choice");
     }

@@ -46,7 +46,7 @@ concept point = std::equality_comparable<P> && requires(P p1, P p2) {
   { p1 + p2 } -> std::same_as<P>;
   { norm<Norm::L1>(p1) } -> std::floating_point;
   { norm<Norm::L2>(p1) } -> std::floating_point;
-  { norm<Norm::LINFTY>(p1) } -> std::floating_point;
+  { norm<Norm::LINF>(p1) } -> std::floating_point;
   { zero<P>() } -> std::same_as<P>;
   { dim<P>() } -> std::unsigned_integral;
   {

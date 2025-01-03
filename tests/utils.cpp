@@ -14,9 +14,9 @@ TEST_CASE("Norms") {
   CHECK(norm<Norm::L1>(1, -3) == 4);
   CHECK(norm<Norm::L2>(1) == 1);
   CHECK(norm<Norm::L2>(3, -4) == 5);
-  CHECK(norm<Norm::LINFTY>(1) == 1);
-  CHECK(norm<Norm::LINFTY>(3, -4) == 4);
-  CHECK(norm<Norm::LINFTY>(4, -4) == 4);
+  CHECK(norm<Norm::LINF>(1) == 1);
+  CHECK(norm<Norm::LINF>(3, -4) == 4);
+  CHECK(norm<Norm::LINF>(4, -4) == 4);
 
   REQUIRE_THAT(norm<Norm::L2>(1, 1), WithinRel(1.4142135623730951));    // √2
   REQUIRE_THAT(norm<Norm::L2>(2, 2), WithinRel(2.8284271247461903));    // 2√2

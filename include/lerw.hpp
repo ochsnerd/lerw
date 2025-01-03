@@ -44,7 +44,7 @@ template <std::size_t dim> struct DirectionSelector<dim, Norm::L2> {
   using type = L2Direction<PointType<dim>>;
 };
 
-template <std::size_t dim> struct DirectionSelector<dim, Norm::LINFTY> {
+template <std::size_t dim> struct DirectionSelector<dim, Norm::LINF> {
   using type = LinftyDirection<PointType<dim>>;
 };
 
@@ -57,7 +57,7 @@ template <> struct LengthSelector<Norm::L2> {
   using type = Pareto;
 };
 
-template <> struct LengthSelector<Norm::LINFTY> {
+template <> struct LengthSelector<Norm::LINF> {
   using type = Zipf<>;
 };
 
