@@ -69,6 +69,8 @@ add_executable(tests
 )
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 
+target_compile_options(tests PUBLIC -fconcepts-diagnostics-depth=4)
+
 include(CTest)
 include(Catch)
 catch_discover_tests(tests)

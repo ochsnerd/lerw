@@ -23,8 +23,8 @@ concept distribution = requires(D d) {
 
 template <class T> constexpr auto zero() -> T;
 template <class T> constexpr auto dim() -> std::size_t;
-// TODO: Get rid of this (only here because boost::uniform_on_sphere uses the
-// heap)
+template <class T> struct field;
+// TODO: Is there a more elegant way to do this?
 template <class T> struct constructor {
   template <class InputIt>
   auto operator()(InputIt first, InputIt last) const -> T;
@@ -32,28 +32,42 @@ template <class T> struct constructor {
 // int is a point
 template <> constexpr auto zero<int>() -> int { return 0; }
 template <> constexpr auto dim<int>() -> std::size_t { return 1; }
+template <> struct field<int> {
+  using type = int;
+};
 template <> struct constructor<int> {
   template <class InputIt>
   auto operator()(InputIt first, InputIt last) const -> int {
-    const auto ret = *first++;
-    assert(first == last);
-    return ret;
+    if (std::distance(first, last) != 1) {
+      throw std::invalid_argument(
+          "Integer constructor requires exactly 1 element");
+    }
+    return *first;
   };
 };
 
+// TODO: Use this
+// template <std::default_initializable F,
+//           auto result = std::bool_constant<(F{}(), true)>()>
+// consteval auto is_constexpr(F) {
+//   return result;
+// }
+
 template <class P>
-concept point = std::equality_comparable<P> && requires(P p1, P p2) {
+concept point = hashable<P> && requires(P p1, P p2) {
   { p1 + p2 } -> std::same_as<P>;
   { norm<Norm::L1>(p1) } -> std::floating_point;
   { norm<Norm::L2>(p1) } -> std::floating_point;
   { norm<Norm::LINF>(p1) } -> std::floating_point;
   { zero<P>() } -> std::same_as<P>;
   { dim<P>() } -> std::unsigned_integral;
+  typename field<P>::type;
+  requires std::signed_integral<typename field<P>::type>;
   {
-    constructor<P>{}(std::declval<std::vector<int>::iterator>(),
-                     std::declval<std::vector<int>::iterator>())
+    constructor<P>{}(
+        std::declval<typename std::vector<typename field<P>::type>::iterator>(),
+        std::declval<typename std::vector<typename field<P>::type>::iterator>())
   } -> std::same_as<P>;
-  typename hash_set<P>;
 };
 
 template <class D>

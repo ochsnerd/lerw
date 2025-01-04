@@ -12,7 +12,7 @@
 namespace lerw {
 
 // TODO: This is technically broken, the point is not requried to
-// have Directions
+// have Directions (this will become obsolete anyway when we get LengthDistanceStepper for L1 norm)
 template <point P> struct NearestNeighborStepper {
   using Point = P;
   std::uniform_int_distribution<std::size_t> distribution{

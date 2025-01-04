@@ -66,7 +66,7 @@ template <point P> void check2D() {
   CHECK(constructor<P>{}(v.cbegin(), v.cend()) == P{1, 2});
 
   // Set operations
-  gtl::flat_hash_set<P> set{};
+  hash_set<P> set{};
   set.insert(P{1, 1});
   set.insert(P{2, 2});
   CHECK(set.size() == 2);
@@ -99,7 +99,7 @@ template <point P> void check3D() {
   const auto v = std::vector<int>{1, 2, 3};
   CHECK(constructor<P>{}(v.cbegin(), v.cend()) == P{1, 2, 3});
 
-  gtl::flat_hash_set<P> set{};
+  hash_set<P> set{};
   set.insert(P{1, 1, 1});
   set.insert(P{2, 2, 2});
   CHECK(set.size() == 2);
@@ -133,7 +133,7 @@ template <point P> void check4D() {
   const auto v = std::vector<int>{1, 2, 3, 4};
   CHECK(constructor<P>{}(v.cbegin(), v.cend()) == P{1, 2, 3, 4});
 
-  gtl::flat_hash_set<P> set{};
+  hash_set<P> set{};
   set.insert(P{1, 1, 1, 1});
   set.insert(P{2, 2, 2, 2});
   CHECK(set.size() == 2);

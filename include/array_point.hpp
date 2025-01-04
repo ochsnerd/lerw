@@ -7,12 +7,15 @@
 #include <functional>
 #include <unordered_set> // IWYU pragma: keep // std::hash
 
-#include "concepts.hpp" // IWYU pragma: keep // zero<T>()
+#include "concepts.hpp" // IWYU pragma: keep // zero<T>(), etc
 #include "utils.hpp"
 
 namespace lerw {
 
 using int_t = int32_t;
+
+// TODO:
+// template <std::size_t Dim> using ArrayPoint = std::Array<int_t, Dim>;
 
 // For 2- and 3-dimension, this is as fast as struct{int x; int y; int z;}
 template <std::size_t Dim> struct ArrayPoint {
@@ -47,7 +50,8 @@ template <class T>
 concept array_point = requires(T t) {
   t.values;
   // an array has a value_type and a tuple_size
-  requires std::same_as<typename decltype(t.values)::value_type, int_t>;
+  requires std::same_as<typename decltype(t.values)::value_type,
+                        int_t>; // TODO: this is outdated
   std::tuple_size_v<decltype(t.values)>;
 };
 
@@ -57,12 +61,16 @@ template <array_point T> constexpr auto dim() -> std::size_t {
   return std::tuple_size_v<decltype(T::values)>;
 }
 
+template <array_point T> struct field<T> {
+  using type = int_t;
+};
+
 template <array_point T> struct constructor<T> {
   template <class InputIt>
   auto operator()(InputIt first, InputIt last) const -> T {
     if (std::distance(first, last) != dim<T>()) {
       throw std::invalid_argument(
-          "Point1D constructor requires exactly 1 elements");
+          "ArrayPoint constructor requires correct number of elements");
     }
     auto p = zero<T>();
     std::copy(first, last, p.values.begin());

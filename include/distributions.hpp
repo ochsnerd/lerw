@@ -28,14 +28,14 @@ struct Pareto {
 };
 
 // generate Zeta/Zipf-distributed integral values
-  template <std::unsigned_integral R = std::uint32_t> struct Zipf {
+template <std::integral R = std::int32_t> struct Zipf {
   // generate a zipf distributed random variable using rejection sampling
   // for a reference see "Non Iniform Random Variate Generation" by Devroye
 
   using result_type = R;
 
   std::uniform_real_distribution<> uniform{};
-    // Note that this is (s + 1) from wiki
+  // Note that this is (s + 1) from wiki
   double alpha;
   double b = std::pow(2, alpha);
 
@@ -47,12 +47,13 @@ struct Pareto {
 
   template <std::uniform_random_bit_generator RNG>
   auto operator()(RNG &rng) -> R {
+    // the rejection-rate is smaller than 1.5, so this will not loop too much
     while (true) {
-      const long double u = uniform(rng);
-      const result_type X =
-          static_cast<result_type>(std::pow(u, -1.0 / alpha));
+      const double u = uniform(rng);
+      // For a small result_type, this may round when alpha is small
+      const result_type X = static_cast<result_type>(std::pow(u, -1.0 / alpha));
       const long double T = std::pow(1 + 1.0 / X, alpha);
-      const long double v = uniform(rng);
+      const double v = uniform(rng);
       if (v * X * (T - 1) / (b - 1) <= T / b) {
         return X;
       }

@@ -38,30 +38,32 @@ template <> struct PointTypeSelector<3> {
 template <std::size_t dim>
 using PointType = typename PointTypeSelector<dim>::type;
 
-template <std::size_t dim, Norm n> struct DirectionSelector;
+template <point P, Norm n> struct DirectionSelector;
 
-template <std::size_t dim> struct DirectionSelector<dim, Norm::L2> {
-  using type = L2Direction<PointType<dim>>;
+template <point P> struct DirectionSelector<P, Norm::L2> {
+  using type = L2Direction<P>;
 };
 
-template <std::size_t dim> struct DirectionSelector<dim, Norm::LINF> {
-  using type = LinftyDirection<PointType<dim>>;
+template <point P> struct DirectionSelector<P, Norm::LINF> {
+  using type = LinfDirection<P>;
 };
 
-template <std::size_t dim, Norm norm>
-using DirectionType = typename DirectionSelector<dim, norm>::type;
+template <point P, Norm norm>
+using DirectionType = typename DirectionSelector<P, norm>::type;
 
-template <Norm n> struct LengthSelector;
+// Length depends on Point because of the type used to store coordinates
+template <point P, Norm n> struct LengthSelector;
 
-template <> struct LengthSelector<Norm::L2> {
+template <point P> struct LengthSelector<P, Norm::L2> {
   using type = Pareto;
 };
 
-template <> struct LengthSelector<Norm::LINF> {
-  using type = Zipf<>;
+template <point P> struct LengthSelector<P, Norm::LINF> {
+  using type = Zipf<typename field<P>::type>;
 };
 
-template <Norm n> using LengthType = typename LengthSelector<n>::type;
+template <point P, Norm n>
+using LengthType = typename LengthSelector<P, n>::type;
 
 struct LERWComputer {
   std::function<std::mt19937()> rng_factory;
@@ -69,9 +71,10 @@ struct LERWComputer {
   double alpha;
   double distance;
   template <std::size_t dim, Norm norm> auto compute() const {
+    using point_t = PointType<dim>;
     return compute_lerw_lengths(
         [alpha = alpha]() {
-          return LDStepper{LengthType<norm>{alpha}, DirectionType<dim, norm>{}};
+          return LDStepper{LengthType<point_t, norm>{alpha}, DirectionType<point_t, norm>{}};
         },
         [distance = distance]() { return DistanceStopper<norm>{distance}; },
         rng_factory, N);

@@ -12,20 +12,38 @@
 using Catch::Matchers::WithinRel;
 
 TEST_CASE("Zipf") {
-  const auto a = GENERATE(1.5, 2, 2.5);
+  SECTION("small alpha") {
+    const auto a = 0.01;
 
-  // The mean of the Zipf (Zeta) distribution is Z(a) / Z(a + 1) (if a > 1)
-  // (our alpha is s + 1 from wiki)
-  const auto mean_expected = std::riemann_zeta(a) / std::riemann_zeta(a + 1);
+    auto rng = std::mt19937{};
+    auto zipf = lerw::Zipf{a};
 
-  auto rng = std::mt19937{};
-  auto zipf = lerw::Zipf{a};
+    const auto N = 1 << 16;
+    using vec = std::vector<decltype(zipf)::result_type>;
+    auto v = vec{};
+    std::generate_n(std::back_inserter(v), N, [&] { return zipf(rng); });
+    const auto mean = std::accumulate(v.begin(), v.end(), 0.0) / N;
 
-  const auto N = 1 << 16;
-  auto v = std::vector<decltype(zipf)::result_type>{};
-  std::generate_n(std::back_inserter(v), N, [&] { return zipf(rng); });
-  const auto mean = std::accumulate(v.begin(), v.end(), 0.0) / N;
+    // is there a less stupid property we can check?
+    REQUIRE(v.size() == N);
+  }
 
-  // Note that the variance is quite high with this many samples
-  REQUIRE_THAT(mean, WithinRel(mean_expected, 0.01));
+  SECTION("mean") {
+    const auto a = GENERATE(1.5, 2, 2.5);
+
+    // The mean of the Zipf (Zeta) distribution is Z(a) / Z(a + 1) (if a > 1)
+    // (our alpha is s + 1 from wiki)
+    const auto mean_expected = std::riemann_zeta(a) / std::riemann_zeta(a + 1);
+
+    auto rng = std::mt19937{};
+    auto zipf = lerw::Zipf{a};
+
+    const auto N = 1 << 16;
+    auto v = std::vector<decltype(zipf)::result_type>{};
+    std::generate_n(std::back_inserter(v), N, [&] { return zipf(rng); });
+    const auto mean = std::accumulate(v.begin(), v.end(), 0.0) / N;
+
+    // Note that the variance is quite high with this many samples
+    REQUIRE_THAT(mean, WithinRel(mean_expected, 0.01));
+  }
 }
