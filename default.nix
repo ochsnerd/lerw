@@ -11,11 +11,12 @@ in
 gcc14Stdenv.mkDerivation {
   name = "lerw";
   src = ./.;
+
   doCheck = true;
 
   buildInputs = [
     tbb
-    boost185
+    boost
     catch2_3
     clang-tools
     cmake

@@ -1,5 +1,5 @@
 # build artifacts
-build
+build_manual
 result
 bin
 
@@ -9,3 +9,6 @@ compile_commands.json
 
 # direnv
 .direnv/*
+
+# python
+__pycache__
