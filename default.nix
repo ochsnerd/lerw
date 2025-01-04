@@ -11,6 +11,7 @@ in
 gcc14Stdenv.mkDerivation {
   name = "lerw";
   src = ./.;
+  doCheck = true;
 
   buildInputs = [
     tbb
