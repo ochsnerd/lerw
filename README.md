@@ -36,3 +36,5 @@ make build_manual && cp build_manual/compile_commands.json .
 - Investigate if there can be some compile-time evaluation of LINF and L1 steps for small r
 - Visualize walk
 - convert the package to a nix flake (also figure out what that would actually do)
+
+Doing: robin_hood has same performance, abseil does not compile

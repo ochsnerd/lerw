@@ -15,6 +15,7 @@ gcc14Stdenv.mkDerivation {
   doCheck = true;
 
   buildInputs = [
+    abseil-cpp
     tbb
     boost
     catch2_3
