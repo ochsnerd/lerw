@@ -19,6 +19,7 @@ gcc14Stdenv.mkDerivation {
     boost
     catch2_3
     clang-tools
+    gnumake
     cmake
     ninja
     pythonEnv

@@ -10,7 +10,9 @@ build:
 
 install: build interface.py
 	mkdir -p $(INSTALL_DIR)/bin
-	cp result/lerw $(INSTALL_DIR)/bin
+# the file in result is write-protected.
+# cp -f so that multiple installs work
+	cp -f result/lerw $(INSTALL_DIR)/bin
 	cp -n interface.py $(INSTALL_DIR)
 
 build_manual:

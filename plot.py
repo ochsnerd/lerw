@@ -186,27 +186,40 @@ def generate_R_values(min_size: int, max_size: int, num_sizes: int) -> List[int]
 
 def main():
     config = {
-        "min_size": 500,
-        "max_size": 2_000,
+        "min_size": 2**8,
+        "max_size": 2**13,
         "num_sizes": 4,
-        "alpha_min": 0.2,
-        "alpha_max": 2.0,
-        "alpha_steps": 10,
+        "alpha_min": 0.5,
+        "alpha_max": 2.5,
+        "alpha_steps": 11,
     }
 
     # Generate parameter arrays
-    R_values = generate_R_values(
-        config["min_size"], config["max_size"], config["num_sizes"]
-    )
-    alpha_values = np.linspace(
-        config["alpha_min"], config["alpha_max"], config["alpha_steps"]
-    )
+    R_values = [2**i for i in range(8, 14)]
+    alpha_values = [
+        0.5,
+        0.8,
+        1.1,
+        1.2,
+        1.3,
+        1.4,
+        1.5,
+        1.6,
+        1.7,
+        1.8,
+        1.9,
+        2.0,
+        2.1,
+        2.2,
+        2.5,
+        2.8,
+    ]
 
     plt.figure(figsize=(10, 6))
     x_range = np.array([min(alpha_values), max(alpha_values)])
     plt.plot(x_range, x_range, "--", color="gray", alpha=0.7, label="α = D")
     for dim, norm in product([2, 3], [Norm.L1, Norm.L2, Norm.LINF]):
-        show_alpha_dependence(dim, norm, R_values, alpha_values, 500)
+        show_alpha_dependence(dim, norm, R_values, alpha_values, 1000)
     plt.show()
 
 
