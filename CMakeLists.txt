@@ -10,6 +10,8 @@ set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTOR
 include_directories(${CMAKE_SOURCE_DIR}/include)
 # including gtl as a system dependency prevents warnings when compiling it
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/gtl/include)
+include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/robin_hood)
+find_package(absl REQUIRED)
 
 add_executable(lerw src/main.cpp)
 
@@ -54,6 +56,7 @@ target_compile_options(lerw PUBLIC -fcompare-debug-second)
 
 target_link_libraries(lerw PRIVATE
   tbb
+  absl::flat_hash_set
   boost_program_options)
 
 # testing
@@ -66,6 +69,7 @@ add_executable(tests
 	tests/points.cpp
 	tests/distributions.cpp
 	tests/directions.cpp
+	tests/benchmarks.cpp
 )
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 

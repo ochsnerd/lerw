@@ -23,8 +23,11 @@ install_manual: build_manual interface.py
 
 # manually build for tests, because nix-build does full recompilation
 test: build_manual interface.py
-	cd $(BUILD_DIR) && ctest --output-on-failure
+	cd $(BUILD_DIR) && ./tests ~[benchmark]
 	python interface.py
+
+bench: build_manual
+	cd $(BUILD_DIR) && ./tests [benchmark]
 
 clean:
 	rm -rf $(BUILD_DIR)
