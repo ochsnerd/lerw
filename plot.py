@@ -131,7 +131,7 @@ def plot_alpha_dependence(
 
     plt.xlabel("α")
     plt.ylabel("D")
-    plt.title(f"Fractal Dimension vs Alpha in {dimension}D LERW")
+    plt.title(f"Fractal Dimension vs Alpha LERW")
     plt.grid(True, alpha=0.3)
     plt.legend(loc="lower right")
 
@@ -205,8 +205,8 @@ def main():
     plt.figure(figsize=(10, 6))
     x_range = np.array([min(alpha_values), max(alpha_values)])
     plt.plot(x_range, x_range, "--", color="gray", alpha=0.7, label="α = D")
-    for dim, norm in product([2, 3], [Norm.L2, Norm.LINF]):
-        show_alpha_dependence(dim, norm, R_values, alpha_values, 1000)
+    for dim, norm in product([2, 3], [Norm.L1, Norm.L2, Norm.LINF]):
+        show_alpha_dependence(dim, norm, R_values, alpha_values, 500)
     plt.show()
 
 

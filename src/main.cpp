@@ -82,11 +82,18 @@ auto main(int argc, char *argv[]) -> int {
   auto computer = LERWComputer{[&seed_rng] { return std::mt19937{seed_rng()}; },
                                N, alpha, distance};
 
-  std::println(*out, "# D={}, R={}, N={}, α={}, Norm={}, seed={}", dimension,
-               distance, N, alpha, norm_to_string(norm), seed);
-
   const auto lengths = [&] {
     switch (switch_pair(dimension, norm)) {
+    case switch_pair(1, Norm::L1):
+      return computer.compute<1, Norm::L1>();
+    case switch_pair(2, Norm::L1):
+      return computer.compute<2, Norm::L1>();
+    case switch_pair(3, Norm::L1):
+      return computer.compute<3, Norm::L1>();
+    case switch_pair(4, Norm::L1):
+      return computer.compute<4, Norm::L1>();
+    case switch_pair(5, Norm::L1):
+      return computer.compute<5, Norm::L1>();
     case switch_pair(1, Norm::L2):
       return computer.compute<1, Norm::L2>();
     case switch_pair(2, Norm::L2):
@@ -97,8 +104,9 @@ auto main(int argc, char *argv[]) -> int {
       return computer.compute<4, Norm::L2>();
     case switch_pair(5, Norm::L2):
       return computer.compute<5, Norm::L2>();
-    case switch_pair(1, Norm::LINF):
-      return computer.compute<1, Norm::LINF>();
+      // TODO: LINF with d=1 is broken
+    // case switch_pair(1, Norm::LINF):
+    //   return computer.compute<1, Norm::LINF>();
     case switch_pair(2, Norm::LINF):
       return computer.compute<2, Norm::LINF>();
     case switch_pair(3, Norm::LINF):
@@ -111,6 +119,9 @@ auto main(int argc, char *argv[]) -> int {
       throw std::invalid_argument("Unsupported dimension/norm choice");
     }
   }();
+
+  std::println(*out, "# D={}, R={}, N={}, α={}, Norm={}, seed={}", dimension,
+               distance, N, alpha, norm_to_string(norm), seed);
 
   for (auto l : lengths) {
     std::println(*out, "{}", l);

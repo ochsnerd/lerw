@@ -40,6 +40,10 @@ using PointType = typename PointTypeSelector<dim>::type;
 
 template <point P, Norm n> struct DirectionSelector;
 
+template <point P> struct DirectionSelector<P, Norm::L1> {
+  using type = L2Direction<P>;
+};
+
 template <point P> struct DirectionSelector<P, Norm::L2> {
   using type = L2Direction<P>;
 };
@@ -53,6 +57,10 @@ using DirectionType = typename DirectionSelector<P, norm>::type;
 
 // Length depends on Point because of the type used to store coordinates
 template <point P, Norm n> struct LengthSelector;
+
+template <point P> struct LengthSelector<P, Norm::L1> {
+  using type = Zipf<typename field<P>::type>;
+};
 
 template <point P> struct LengthSelector<P, Norm::L2> {
   using type = Pareto;
