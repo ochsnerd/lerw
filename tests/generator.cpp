@@ -2,10 +2,10 @@
 #include <random>
 #include <vector>
 
-#include "generator.hpp"
-#include "ldstepper.hpp"
 #include "directions.hpp"
 #include "distributions.hpp"
+#include "generator.hpp"
+#include "ldstepper.hpp"
 #include "point.hpp"
 #include "stepper.hpp"
 #include "stopper.hpp"
@@ -53,7 +53,7 @@ struct LoopingMockStepper {
 TEST_CASE("RandomWalkGenerator basic functionality") {
   auto rng = std::mt19937{42};
   SECTION("Walk with zero steps") {
-    RandomWalkGenerator generator{MockStopper{0}, MockStepper{}};
+    RandomWalkGenerator generator{ MockStepper{}, MockStopper{0}};
     const auto walk = generator(rng);
 
     REQUIRE(walk.size() == 1);
@@ -61,7 +61,7 @@ TEST_CASE("RandomWalkGenerator basic functionality") {
   }
 
   SECTION("Walk with one step") {
-    RandomWalkGenerator generator{MockStopper{1}, MockStepper{}};
+    RandomWalkGenerator generator{ MockStepper{}, MockStopper{1}};
     const auto walk = generator(rng);
 
     REQUIRE(walk.size() == 2);
@@ -71,7 +71,7 @@ TEST_CASE("RandomWalkGenerator basic functionality") {
 
   SECTION("Walk with multiple steps") {
     const size_t num_steps = 5;
-    RandomWalkGenerator generator{MockStopper{num_steps}, MockStepper{}};
+    RandomWalkGenerator generator{ MockStepper{}, MockStopper{num_steps}};
     const std::vector<int> expected = {0, 1, 2, 3, 4, 5};
 
     const auto walk = generator(rng);
@@ -81,7 +81,7 @@ TEST_CASE("RandomWalkGenerator basic functionality") {
 
   SECTION("Verify stepper is called correct number of times") {
     const size_t num_steps = 4;
-    RandomWalkGenerator generator{MockStopper{num_steps}, MockStepper{}};
+    RandomWalkGenerator generator{ MockStepper{}, MockStopper{num_steps}};
     const auto walk = generator(rng);
 
     REQUIRE(generator.stepper.step_count == num_steps);
@@ -89,7 +89,10 @@ TEST_CASE("RandomWalkGenerator basic functionality") {
 
   SECTION("Large number of steps") {
     const size_t large_steps = 1000;
-    RandomWalkGenerator generator{MockStopper{large_steps}, MockStepper{}};
+    RandomWalkGenerator generator{
+        MockStepper{},
+        MockStopper{large_steps}
+    };
     const auto walk = generator(rng);
 
     REQUIRE(walk.size() == large_steps + 1);
@@ -103,7 +106,7 @@ TEST_CASE("LoopErasedRandomWalkGenerator") {
   auto rng = std::mt19937{42};
 
   SECTION("Generates walk of correct length") {
-    LoopErasedRandomWalkGenerator generator{stopper, MockStepper{}};
+    LoopErasedRandomWalkGenerator generator{MockStepper{}, stopper};
     const std::vector<int> expected = {0, 1, 2, 3, 4, 5};
 
     const auto walk = generator(rng);
@@ -112,7 +115,7 @@ TEST_CASE("LoopErasedRandomWalkGenerator") {
   }
 
   SECTION("Simple loop detection and erasure") {
-    LoopErasedRandomWalkGenerator generator{stopper, LoopingMockStepper{}};
+    LoopErasedRandomWalkGenerator generator{LoopingMockStepper{}, stopper};
     auto walk = generator(rng);
 
     // Check that the loop was erased (stepper did 1 -> 2 -> 3 -> 0 -> 1)
@@ -121,14 +124,14 @@ TEST_CASE("LoopErasedRandomWalkGenerator") {
   }
 
   SECTION("Stops at maximum steps") {
-    LoopErasedRandomWalkGenerator generator{stopper, MockStepper{}};
+    LoopErasedRandomWalkGenerator generator{MockStepper{}, stopper};
     auto walk = generator(rng);
 
     REQUIRE(walk.size() == max_steps + 1);
   }
 
   SECTION("Handles zero steps") {
-    LoopErasedRandomWalkGenerator generator{MockStopper{0}, MockStepper{}};
+    LoopErasedRandomWalkGenerator generator{MockStepper{}, MockStopper{0}};
     auto walk = generator(rng);
 
     REQUIRE(walk.size() == 1); // Should still contain start point
@@ -139,25 +142,25 @@ TEST_CASE("LoopErasedRandomWalkGenerator") {
 TEST_CASE("ConstructDifferentCombinations") {
   // TODO: I want these gone, they should be LDSteppers with L1Direction
   const auto a = LoopErasedRandomWalkGenerator{
-      DistanceStopper<Norm::L1>{10.0}, NearestNeighborStepper<Point1D>{}};
+      NearestNeighborStepper<Point1D>{}, DistanceStopper<Norm::L1>{10.0}};
   const auto b = LoopErasedRandomWalkGenerator{
-      DistanceStopper<Norm::L1>{10.0}, NearestNeighborStepper<Point2D>{}};
+      NearestNeighborStepper<Point2D>{}, DistanceStopper<Norm::L1>{10.0}};
   const auto c = LoopErasedRandomWalkGenerator{
-      DistanceStopper<Norm::L1>{10.0}, NearestNeighborStepper<Point3D>{}};
+      NearestNeighborStepper<Point3D>{}, DistanceStopper<Norm::L1>{10.0}};
 
-  const auto d = LoopErasedRandomWalkGenerator{DistanceStopper<Norm::L1>{10.0},
-                                               LDStepper{
+  const auto d = LoopErasedRandomWalkGenerator{LDStepper{
                                                    Pareto{2.0},
                                                    L2Direction<Point1D>{},
-                                               }};
-  const auto e = LoopErasedRandomWalkGenerator{DistanceStopper<Norm::L1>{10.0},
-                                               LDStepper{
+                                               },
+                                               DistanceStopper<Norm::L1>{10.0}};
+  const auto e = LoopErasedRandomWalkGenerator{LDStepper{
                                                    Pareto{2.0},
                                                    L2Direction<Point2D>{},
-                                               }};
-  const auto f = LoopErasedRandomWalkGenerator{DistanceStopper<Norm::L1>{10.0},
-                                               LDStepper{
+                                               },
+                                               DistanceStopper<Norm::L1>{10.0}};
+  const auto f = LoopErasedRandomWalkGenerator{LDStepper{
                                                    Pareto{2.0},
                                                    L2Direction<Point3D>{},
-                                               }};
+                                               },
+                                               DistanceStopper<Norm::L1>{10.0}};
 }

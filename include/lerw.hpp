@@ -78,21 +78,22 @@ struct LERWComputer {
   std::size_t N;
   double alpha;
   double distance;
-  template <std::size_t dim, Norm norm> auto compute() const {
+  template <std::size_t dim, Norm norm> auto compute(auto projection) const {
     using point_t = PointType<dim>;
-    return compute_lerw_lengths(
-        [alpha = alpha]() {
-          return LDStepper{LengthType<point_t, norm>{alpha}, DirectionType<point_t, norm>{}};
+    return compute_lengths(
+        [alpha = alpha, distance = distance] {
+          return LoopErasedRandomWalkGenerator{
+              LDStepper{LengthType<point_t, norm>{alpha},
+                        DirectionType<point_t, norm>{}},
+              DistanceStopper<norm>{distance}};
         },
-        [distance = distance]() { return DistanceStopper<norm>{distance}; },
-        rng_factory, N);
+        rng_factory, projection, N);
   }
 };
 
-template <class GeneratorFactory, class RNGFactory>
+template <class GeneratorFactory, class RNGFactory, class Projection>
 auto compute_lengths(GeneratorFactory &&generator_factory,
-                     RNGFactory &&rng_factory,
-                     size_t N) -> std::vector<size_t> {
+                     RNGFactory &&rng_factory, Projection projection, size_t N) {
   auto generators = std::vector<decltype(generator_factory())>{};
   auto rngs = std::vector<decltype(rng_factory())>{};
 
@@ -108,49 +109,9 @@ auto compute_lengths(GeneratorFactory &&generator_factory,
   std::transform(
       std::execution::par_unseq, generators.begin(), generators.end(),
       rngs.begin(), lengths.begin(),
-      [](auto generator, auto rng) { return generator(rng).size(); });
+      [projection](auto generator, auto rng) { return projection(generator(rng)); });
 
   return lengths;
 }
 
-template <class StepperFactory, class StopperFactory, class RNGFactory>
-auto compute_lerw_lengths(StepperFactory &&stepper_factory,
-                          StopperFactory &&stopper_factory,
-                          RNGFactory &&rng_factory,
-                          std::size_t n_samples) -> auto {
-  auto generator_factory = [&stopper_factory, &stepper_factory] {
-    return LoopErasedRandomWalkGenerator{stopper_factory(), stepper_factory()};
-  };
-  return compute_lengths(generator_factory, rng_factory, n_samples);
-}
-
-template <class GeneratorFactory, class RNGFactory>
-auto compute_average_length(GeneratorFactory &&generator_factory,
-                            RNGFactory &&rng_factory, size_t N) -> double {
-  assert(N != 0);
-  return std::ranges::fold_left_first(
-             compute_lengths(std::move(generator_factory),
-                             std::move(rng_factory), N),
-             std::plus{}) /
-         static_cast<double>(N);
-}
-
-template <class StepperFactory, class RNGFactory>
-auto compute_lerw_average_lengths(StepperFactory &&stepper_factory,
-                                  RNGFactory &&rng_factory,
-                                  const std::vector<double> &distances,
-                                  std::size_t n_samples) -> auto {
-  auto results = std::vector<std::pair<double, double>>{};
-  for (const auto &d : distances) {
-    auto stopper_factory = [d] { return DistanceStopper<Norm::L2>{d}; };
-    auto l = compute_average_length(
-        [&stopper_factory, &stepper_factory] {
-          return LoopErasedRandomWalkGenerator{stopper_factory(),
-                                               stepper_factory()};
-        },
-        rng_factory, n_samples);
-    results.emplace_back(d, l);
-  }
-  return results;
-}
 } // namespace lerw

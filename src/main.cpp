@@ -85,36 +85,50 @@ auto main(int argc, char *argv[]) -> int {
   const auto lengths = [&] {
     switch (switch_pair(dimension, norm)) {
     case switch_pair(1, Norm::L1):
-      return computer.compute<1, Norm::L1>();
+      return computer.compute<1, Norm::L1>(
+          [](auto walk) { return walk.size(); });
     case switch_pair(2, Norm::L1):
-      return computer.compute<2, Norm::L1>();
+      return computer.compute<2, Norm::L1>(
+          [](auto walk) { return walk.size(); });
     case switch_pair(3, Norm::L1):
-      return computer.compute<3, Norm::L1>();
+      return computer.compute<3, Norm::L1>(
+          [](auto walk) { return walk.size(); });
     case switch_pair(4, Norm::L1):
-      return computer.compute<4, Norm::L1>();
+      return computer.compute<4, Norm::L1>(
+          [](auto walk) { return walk.size(); });
     case switch_pair(5, Norm::L1):
-      return computer.compute<5, Norm::L1>();
+      return computer.compute<5, Norm::L1>(
+          [](auto walk) { return walk.size(); });
     case switch_pair(1, Norm::L2):
-      return computer.compute<1, Norm::L2>();
+      return computer.compute<1, Norm::L2>(
+          [](auto walk) { return walk.size(); });
     case switch_pair(2, Norm::L2):
-      return computer.compute<2, Norm::L2>();
+      return computer.compute<2, Norm::L2>(
+          [](auto walk) { return walk.size(); });
     case switch_pair(3, Norm::L2):
-      return computer.compute<3, Norm::L2>();
+      return computer.compute<3, Norm::L2>(
+          [](auto walk) { return walk.size(); });
     case switch_pair(4, Norm::L2):
-      return computer.compute<4, Norm::L2>();
+      return computer.compute<4, Norm::L2>(
+          [](auto walk) { return walk.size(); });
     case switch_pair(5, Norm::L2):
-      return computer.compute<5, Norm::L2>();
+      return computer.compute<5, Norm::L2>(
+          [](auto walk) { return walk.size(); });
       // TODO: LINF with d=1 is broken
     // case switch_pair(1, Norm::LINF):
     //   return computer.compute<1, Norm::LINF>();
     case switch_pair(2, Norm::LINF):
-      return computer.compute<2, Norm::LINF>();
+      return computer.compute<2, Norm::LINF>(
+          [](auto walk) { return walk.size(); });
     case switch_pair(3, Norm::LINF):
-      return computer.compute<3, Norm::LINF>();
+      return computer.compute<3, Norm::LINF>(
+          [](auto walk) { return walk.size(); });
     case switch_pair(4, Norm::LINF):
-      return computer.compute<4, Norm::LINF>();
+      return computer.compute<4, Norm::LINF>(
+          [](auto walk) { return walk.size(); });
     case switch_pair(5, Norm::LINF):
-      return computer.compute<5, Norm::LINF>();
+      return computer.compute<5, Norm::LINF>(
+          [](auto walk) { return walk.size(); });
     default:
       throw std::invalid_argument("Unsupported dimension/norm choice");
     }
