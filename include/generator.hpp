@@ -8,8 +8,8 @@
 namespace lerw {
 
 template <stopper Stopper, stepper Stepper> struct RandomWalkGenerator {
-  Stopper stopper;
   Stepper stepper;
+  Stopper stopper;
 
   template <std::uniform_random_bit_generator RNG>
   constexpr auto operator()(RNG &rng) -> auto {
@@ -24,8 +24,8 @@ template <stopper Stopper, stepper Stepper> struct RandomWalkGenerator {
 
 template <stopper Stopper, stepper Stepper>
 struct LoopErasedRandomWalkGenerator {
-  Stopper stopper;
   Stepper stepper;
+  Stopper stopper;
 
   template <std::uniform_random_bit_generator RNG>
   constexpr auto operator()(RNG &rng) -> auto {

@@ -11,10 +11,16 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 # including gtl as a system dependency prevents warnings when compiling it
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/gtl/include)
 
-add_executable(lerw src/main.cpp)
+set(COMMON_SOURCES
+    src/config.cpp
+)
 
+add_executable(lerw_length src/main_length.cpp ${COMMON_SOURCES})
+add_executable(lerw_points src/main_points.cpp ${COMMON_SOURCES})
+
+foreach(target lerw_length lerw_points)
 # options from https://github.com/cpp-best-practices/cmake_template
-target_compile_options(lerw PUBLIC
+target_compile_options(${target} PUBLIC
 			    -Wall
   			    -Wextra # reasonable and standard
        			    -Wshadow # warn the user if a variable declaration shadows one from a parent context
@@ -41,20 +47,21 @@ target_compile_options(lerw PUBLIC
         		    -Wsuggest-override # warn if an overridden member function is not marked 'override' or 'final'
 			    )
 
-target_compile_options(lerw PUBLIC -O3 -march=native)
-target_compile_options(lerw PUBLIC -fconcepts-diagnostics-depth=4)
+target_compile_options(${target} PUBLIC -O3 -march=native)
+target_compile_options(${target} PUBLIC -fconcepts-diagnostics-depth=4)
 
 # silence warnings about portability of the gtl
 # https://gcc.gnu.org/onlinedocs/gcc-14.1.0/gcc/Warning-Options.html#index-Winterference-size
-target_compile_options(lerw PUBLIC -Wno-interference-size)
+target_compile_options(${target} PUBLIC -Wno-interference-size)
 
 # silence notes from the pstl-implementation
 # https://stackoverflow.com/a/23995391
-target_compile_options(lerw PUBLIC -fcompare-debug-second)
+target_compile_options(${target} PUBLIC -fcompare-debug-second)
 
-target_link_libraries(lerw PRIVATE
+target_link_libraries(${target} PRIVATE
   tbb
   boost_program_options)
+endforeach()
 
 # testing
 find_package(Catch2 3 REQUIRED)
@@ -76,4 +83,4 @@ include(Catch)
 catch_discover_tests(tests)
 
 # nix-build wants an 'install' target
-install(TARGETS lerw DESTINATION .)
+install(TARGETS lerw_length lerw_points DESTINATION .)
