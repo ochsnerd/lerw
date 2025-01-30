@@ -73,12 +73,13 @@ template <point P> struct LengthSelector<P, Norm::LINF> {
 template <point P, Norm n>
 using LengthType = typename LengthSelector<P, n>::type;
 
-struct LERWComputer {
+struct DistanceLerwComputer {
   std::function<std::mt19937()> rng_factory;
   std::size_t N;
   double alpha;
   double distance;
-  template <std::size_t dim, Norm norm> auto compute(auto projection) const {
+  template <std::size_t dim, Norm norm, class Projection = std::identity>
+  auto compute(Projection projection = {}) const {
     using point_t = PointType<dim>;
     return compute_lengths(
         [alpha = alpha, distance = distance] {
@@ -91,9 +92,24 @@ struct LERWComputer {
   }
 };
 
+struct LengthLerwComputer {
+  double alpha;
+  size_t length;
+
+  template <std::size_t dim, Norm norm, std::uniform_random_bit_generator RNG>
+  auto compute(RNG &rng) const {
+    using point_t = PointType<dim>;
+    return LoopErasedRandomWalkGenerator{
+        LDStepper{LengthType<point_t, norm>{alpha},
+                  DirectionType<point_t, norm>{}},
+        LengthStopper{length}}(rng);
+  }
+};
+
 template <class GeneratorFactory, class RNGFactory, class Projection>
 auto compute_lengths(GeneratorFactory &&generator_factory,
-                     RNGFactory &&rng_factory, Projection projection, size_t N) {
+                     RNGFactory &&rng_factory, Projection projection,
+                     size_t N) {
   auto generators = std::vector<decltype(generator_factory())>{};
   auto rngs = std::vector<decltype(rng_factory())>{};
 
@@ -106,10 +122,11 @@ auto compute_lengths(GeneratorFactory &&generator_factory,
 
   std::vector<size_t> lengths(N);
 
-  std::transform(
-      std::execution::par_unseq, generators.begin(), generators.end(),
-      rngs.begin(), lengths.begin(),
-      [projection](auto generator, auto rng) { return projection(generator(rng)); });
+  std::transform(std::execution::par_unseq, generators.begin(),
+                 generators.end(), rngs.begin(), lengths.begin(),
+                 [projection](auto generator, auto rng) {
+                   return projection(generator(rng));
+                 });
 
   return lengths;
 }

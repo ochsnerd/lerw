@@ -80,4 +80,10 @@ template <Norm N, class... T> constexpr auto norm(T... args) -> auto {
   return norm_selector<N>{}(args...);
 }
 
+
+// helper for switch
+constexpr auto switch_pair(std::size_t dimension, Norm norm) -> std::size_t {
+  return (dimension << 2) + static_cast<size_t>(norm);
+}
+
 } // namespace lerw

@@ -10,7 +10,8 @@ build:
 
 install: build interface.py
 	mkdir -p $(INSTALL_DIR)/bin
-	cp result/lerw $(INSTALL_DIR)/bin
+	cp result/lerw_length $(INSTALL_DIR)/bin
+	cp result/lerw_points $(INSTALL_DIR)/bin
 	cp -n interface.py $(INSTALL_DIR)
 
 build_manual:
